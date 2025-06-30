@@ -1,7 +1,11 @@
 {
   "name": "loantrack-pro",
   "version": "2.0.0",
+<<<<<<< HEAD
   "description": "A world-class CLI-based loan tracking toolkit for Termux",
+=======
+  "description": "A professional CLI-based loan tracking toolkit for Termux with advanced features",
+>>>>>>> 6ddcfb57f05aff881c487e0e8321741359c2ddc9
   "main": "dist/index.js",
   "bin": {
     "loantrack": "dist/index.js"
@@ -12,8 +16,12 @@
     "dev": "ts-node src/index.ts",
     "test": "jest",
     "lint": "eslint src/**/*.ts",
+<<<<<<< HEAD
     "format": "prettier --write src/**/*.ts",
     "clean": "rimraf dist"
+=======
+    "format": "prettier --write src/**/*.ts"
+>>>>>>> 6ddcfb57f05aff881c487e0e8321741359c2ddc9
   },
   "dependencies": {
     "@types/uuid": "^10.0.0",
@@ -27,17 +35,38 @@
     "figlet": "^1.7.0",
     "gradient-string": "^2.0.2",
     "inquirer": "^9.3.7",
+<<<<<<< HEAD
     "nanospinner": "^1.1.0",
     "ora": "^8.1.1",
     "pdfkit": "^0.15.0",
     "terminal-link": "^3.0.0",
     "uuid": "^11.1.0",
     "winston": "^3.15.0"
+=======
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3",
+    "uuid": "^11.1.0",
+    "chalk": "^5.3.0",
+    "figlet": "^1.7.0",
+    "gradient-string": "^2.0.2",
+    "ora": "^8.1.1",
+    "cli-table3": "^0.6.5",
+    "winston": "^3.15.0",
+    "pdfkit": "^0.15.0",
+    "csv-writer": "^1.6.0",
+    "date-fns": "^4.1.0",
+    "commander": "^12.1.0",
+    "boxen": "^8.0.1",
+    "nanospinner": "^1.1.0",
+    "cli-progress": "^3.12.0",
+    "node-cron": "^3.0.3"
+>>>>>>> 6ddcfb57f05aff881c487e0e8321741359c2ddc9
   },
   "devDependencies": {
     "@types/figlet": "^1.5.8",
     "@types/gradient-string": "^1.1.6",
     "@types/inquirer": "^9.0.8",
+<<<<<<< HEAD
     "@types/jest": "^29.5.14",
     "@types/node": "^20.19.1",
     "@types/pdfkit": "^0.13.5",
@@ -50,6 +79,18 @@
     "ts-jest": "^29.2.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"
+=======
+    "@types/node": "^20.19.1",
+    "@types/figlet": "^1.5.8",
+    "@types/pdfkit": "^0.13.5",
+    "@types/node-cron": "^3.0.11",
+    "@typescript-eslint/eslint-plugin": "^8.18.2",
+    "@typescript-eslint/parser": "^8.18.2",
+    "eslint": "^9.18.0",
+    "prettier": "^3.4.2",
+    "jest": "^29.7.0",
+    "@types/jest": "^29.5.14"
+>>>>>>> 6ddcfb57f05aff881c487e0e8321741359c2ddc9
   },
   "author": {
     "name": "John Ilesanmi",
@@ -68,4 +109,8 @@
   "engines": {
     "node": ">=18.0.0"
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> 6ddcfb57f05aff881c487e0e8321741359c2ddc9
