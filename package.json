@@ -1,0 +1,71 @@
+{
+  "name": "loantrack-pro",
+  "version": "2.0.0",
+  "description": "A world-class CLI-based loan tracking toolkit for Termux",
+  "main": "dist/index.js",
+  "bin": {
+    "loantrack": "dist/index.js"
+  },
+  "scripts": {
+    "start": "ts-node src/index.ts",
+    "build": "tsc",
+    "dev": "ts-node src/index.ts",
+    "test": "jest",
+    "lint": "eslint src/**/*.ts",
+    "format": "prettier --write src/**/*.ts",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@types/uuid": "^10.0.0",
+    "boxen": "^8.0.1",
+    "chalk": "^5.3.0",
+    "cli-progress": "^3.12.0",
+    "cli-table3": "^0.6.5",
+    "commander": "^12.1.0",
+    "csv-writer": "^1.6.0",
+    "date-fns": "^4.1.0",
+    "figlet": "^1.7.0",
+    "gradient-string": "^2.0.2",
+    "inquirer": "^9.3.7",
+    "nanospinner": "^1.1.0",
+    "ora": "^8.1.1",
+    "pdfkit": "^0.15.0",
+    "terminal-link": "^3.0.0",
+    "uuid": "^11.1.0",
+    "winston": "^3.15.0"
+  },
+  "devDependencies": {
+    "@types/figlet": "^1.5.8",
+    "@types/gradient-string": "^1.1.6",
+    "@types/inquirer": "^9.0.8",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^20.19.1",
+    "@types/pdfkit": "^0.13.5",
+    "@typescript-eslint/eslint-plugin": "^8.18.2",
+    "@typescript-eslint/parser": "^8.18.2",
+    "eslint": "^9.18.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.4.2",
+    "rimraf": "^6.0.1",
+    "ts-jest": "^29.2.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.8.3"
+  },
+  "author": {
+    "name": "John Ilesanmi",
+    "instagram": "@numcalm",
+    "github": "@tamecalm"
+  },
+  "license": "MIT",
+  "keywords": [
+    "loan-tracker",
+    "cli",
+    "termux",
+    "typescript",
+    "finance",
+    "debt-management"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
