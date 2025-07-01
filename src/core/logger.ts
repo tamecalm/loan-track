@@ -23,6 +23,7 @@ export interface LoggerConfig {
   dateFormat: string;
   includeStackTrace: boolean;
   colorize: boolean;
+  silentInit?: boolean; // New option to silence initialization logs
 }
 
 export class Logger {
@@ -35,8 +36,8 @@ export class Logger {
   constructor(config?: Partial<LoggerConfig>) {
     this.sessionId = this.generateSessionId();
     this.config = {
-      level: 'info',
-      enableConsole: true,
+      level: 'warn', // Changed from 'info' to 'warn' to reduce verbosity
+      enableConsole: false, // Changed from true to false to disable console logging by default
       enableFile: true,
       logDirectory: path.join(__dirname, '../../logs'),
       maxFileSize: 10, // 10MB
@@ -44,6 +45,7 @@ export class Logger {
       dateFormat: 'ISO',
       includeStackTrace: true,
       colorize: true,
+      silentInit: true, // New option to silence initialization
       ...config
     };
 
@@ -61,14 +63,19 @@ export class Logger {
       await this.rotateLogsIfNeeded();
       this.isInitialized = true;
       
-      // Log initialization
-      this.info('Logger initialized successfully', {
-        sessionId: this.sessionId,
-        logFile: this.logFilePath,
-        config: this.config
-      });
+      // Only log initialization if not in silent mode
+      if (!this.config.silentInit) {
+        this.info('Logger initialized successfully', {
+          sessionId: this.sessionId,
+          logFile: this.logFilePath,
+          config: this.config
+        });
+      }
     } catch (error) {
-      console.error(chalk.red('Failed to initialize logger:'), error);
+      // Only show critical initialization errors
+      if (this.config.enableConsole) {
+        console.error(chalk.red('Failed to initialize logger:'), error);
+      }
     }
   }
 
@@ -208,7 +215,10 @@ export class Logger {
       // Check if log rotation is needed
       await this.rotateLogsIfNeeded();
     } catch (error) {
-      console.error(chalk.red('Failed to write to log file:'), error);
+      // Only show file logging errors if console is enabled
+      if (this.config.enableConsole) {
+        console.error(chalk.red('Failed to write to log file:'), error);
+      }
     }
   }
 
@@ -223,7 +233,9 @@ export class Logger {
     } catch (error) {
       // File doesn't exist yet, no rotation needed
       if ((error as any).code !== 'ENOENT') {
-        console.error(chalk.red('Error checking log file size:'), error);
+        if (this.config.enableConsole) {
+          console.error(chalk.red('Error checking log file size:'), error);
+        }
       }
     }
   }
@@ -240,12 +252,16 @@ export class Logger {
       // Clean up old log files
       await this.cleanupOldLogs();
       
-      this.info('Log file rotated', { 
-        oldFile: this.logFilePath, 
-        newFile: rotatedFilePath 
-      });
+      if (!this.config.silentInit) {
+        this.info('Log file rotated', { 
+          oldFile: this.logFilePath, 
+          newFile: rotatedFilePath 
+        });
+      }
     } catch (error) {
-      console.error(chalk.red('Failed to rotate logs:'), error);
+      if (this.config.enableConsole) {
+        console.error(chalk.red('Failed to rotate logs:'), error);
+      }
     }
   }
 
@@ -274,14 +290,20 @@ export class Logger {
           .forEach(async file => {
             try {
               await fs.unlink(file.path);
-              this.debug('Deleted old log file', { file: file.name });
+              if (!this.config.silentInit) {
+                this.debug('Deleted old log file', { file: file.name });
+              }
             } catch (error) {
-              console.error(chalk.red(`Failed to delete old log file ${file.name}:`), error);
+              if (this.config.enableConsole) {
+                console.error(chalk.red(`Failed to delete old log file ${file.name}:`), error);
+              }
             }
           });
       }
     } catch (error) {
-      console.error(chalk.red('Failed to cleanup old logs:'), error);
+      if (this.config.enableConsole) {
+        console.error(chalk.red('Failed to cleanup old logs:'), error);
+      }
     }
   }
 
@@ -329,10 +351,12 @@ export class Logger {
   async setLogLevel(level: LogLevel): Promise<void> {
     const oldLevel = this.config.level;
     this.config.level = level;
-    await this.info('Log level changed', { 
-      from: oldLevel, 
-      to: level 
-    });
+    if (!this.config.silentInit) {
+      await this.info('Log level changed', { 
+        from: oldLevel, 
+        to: level 
+      });
+    }
   }
 
   getLogLevel(): LogLevel {
@@ -345,12 +369,16 @@ export class Logger {
 
   async enableConsoleLogging(enable: boolean): Promise<void> {
     this.config.enableConsole = enable;
-    await this.info('Console logging toggled', { enabled: enable });
+    if (!this.config.silentInit) {
+      await this.info('Console logging toggled', { enabled: enable });
+    }
   }
 
   async enableFileLogging(enable: boolean): Promise<void> {
     this.config.enableFile = enable;
-    await this.info('File logging toggled', { enabled: enable });
+    if (!this.config.silentInit) {
+      await this.info('File logging toggled', { enabled: enable });
+    }
   }
 
   async getLogStats(): Promise<{
@@ -415,7 +443,9 @@ export class Logger {
           const content = await fs.readFile(logFile, 'utf-8');
           allLogs += content;
         } catch (error) {
-          console.warn(chalk.yellow(`Warning: Could not read log file ${logFile}`));
+          if (this.config.enableConsole) {
+            console.warn(chalk.yellow(`Warning: Could not read log file ${logFile}`));
+          }
         }
       }
       
@@ -451,10 +481,12 @@ export class Logger {
       }
       
       await fs.writeFile(outputPath, allLogs, 'utf-8');
-      await this.info('Logs exported successfully', { 
-        outputPath, 
-        options 
-      });
+      if (!this.config.silentInit) {
+        await this.info('Logs exported successfully', { 
+          outputPath, 
+          options 
+        });
+      }
     } catch (error) {
       await this.error('Failed to export logs', error as Error, { outputPath });
       throw error;
@@ -472,9 +504,13 @@ export class Logger {
         await fs.unlink(logFile);
       }
       
-      await this.info('All log files cleared');
+      if (!this.config.silentInit) {
+        await this.info('All log files cleared');
+      }
     } catch (error) {
-      console.error(chalk.red('Failed to clear logs:'), error);
+      if (this.config.enableConsole) {
+        console.error(chalk.red('Failed to clear logs:'), error);
+      }
       throw error;
     }
   }
@@ -562,7 +598,9 @@ export class Logger {
             }
           });
         } catch (error) {
-          console.warn(chalk.yellow(`Warning: Could not search in log file ${logFile}`));
+          if (this.config.enableConsole) {
+            console.warn(chalk.yellow(`Warning: Could not search in log file ${logFile}`));
+          }
         }
       }
       
@@ -576,14 +614,18 @@ export class Logger {
   // Performance monitoring
   async startTimer(label: string): Promise<() => Promise<void>> {
     const startTime = process.hrtime.bigint();
-    await this.debug(`Timer started: ${label}`);
+    if (!this.config.silentInit) {
+      await this.debug(`Timer started: ${label}`);
+    }
     
     return async () => {
       const endTime = process.hrtime.bigint();
       const duration = Number(endTime - startTime) / 1000000; // Convert to milliseconds
-      await this.info(`Timer completed: ${label}`, { 
-        duration: `${duration.toFixed(2)}ms` 
-      });
+      if (!this.config.silentInit) {
+        await this.info(`Timer completed: ${label}`, { 
+          duration: `${duration.toFixed(2)}ms` 
+        });
+      }
     };
   }
 
@@ -662,7 +704,9 @@ export class Logger {
   }
 
   async shutdown(): Promise<void> {
-    await this.info('Logger shutting down');
+    if (!this.config.silentInit) {
+      await this.info('Logger shutting down');
+    }
     await this.flush();
   }
 }
