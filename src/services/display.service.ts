@@ -116,7 +116,7 @@ export class DisplayService {
 
   showSubHeader(text: string, color: string = 'yellow'): void {
     const subHeader = boxen(
-      chalk[color as keyof typeof chalk](text),
+      this.getChalkColor(color)(text),
       {
         padding: 0,
         margin: { top: 0, bottom: 1, left: 2, right: 2 },
@@ -271,7 +271,7 @@ export class DisplayService {
     const content = 
       `${icon} ${title ? chalk.bold(title) : ''}` +
       (title ? '\n' : '') +
-      chalk[color as keyof typeof chalk](message);
+      this.getChalkColor(color)(message);
 
     const notification = boxen(content, {
       padding: 1,
@@ -357,7 +357,7 @@ export class DisplayService {
     }
 
     const content = 
-      chalk[cardColor as keyof typeof chalk].bold(`${cardIcon} ${title}`) + '\n' +
+      this.getChalkColor(cardColor).bold(`${cardIcon} ${title}`) + '\n' +
       chalk.white.bold(formattedValue);
 
     const card = boxen(content, {
@@ -390,7 +390,7 @@ export class DisplayService {
         }
 
         return boxen(
-          chalk[cardColor as keyof typeof chalk].bold(`${cardIcon} ${stat.title}`) + '\n' +
+          this.getChalkColor(cardColor).bold(`${cardIcon} ${stat.title}`) + '\n' +
           chalk.white.bold(formattedValue),
           {
             padding: 1,
@@ -455,7 +455,7 @@ export class DisplayService {
   }
 
   showSeparator(char: string = '─', length: number = 60, color: string = 'gray'): void {
-    console.log(chalk[color as keyof typeof chalk](char.repeat(length)));
+    console.log(this.getChalkColor(color)(char.repeat(length)));
   }
 
   showLink(text: string, url: string): void {
@@ -543,5 +543,33 @@ export class DisplayService {
     });
     
     console.log();
+  }
+
+  // ==================== HELPER METHODS ====================
+
+  private getChalkColor(colorName: string): typeof chalk.white {
+    switch (colorName.toLowerCase()) {
+      case 'red':
+        return chalk.red;
+      case 'green':
+        return chalk.green;
+      case 'blue':
+        return chalk.blue;
+      case 'yellow':
+        return chalk.yellow;
+      case 'magenta':
+        return chalk.magenta;
+      case 'cyan':
+        return chalk.cyan;
+      case 'white':
+        return chalk.white;
+      case 'gray':
+      case 'grey':
+        return chalk.gray;
+      case 'black':
+        return chalk.black;
+      default:
+        return chalk.white;
+    }
   }
 }
