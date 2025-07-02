@@ -1,7 +1,7 @@
 import typescriptEslint from '@typescript-eslint/eslint-plugin';
 import typescriptParser from '@typescript-eslint/parser';
 import eslintPluginImport from 'eslint-plugin-import';
-import eslintPluginNode from 'eslint-plugin-node';
+import eslintPluginN from 'eslint-plugin-n';
 
 export default [
   {
@@ -23,7 +23,7 @@ export default [
     plugins: {
       '@typescript-eslint': typescriptEslint,
       import: eslintPluginImport,
-      node: eslintPluginNode,
+      n: eslintPluginN,
     },
     rules: {
       // TypeScript Rules
@@ -337,22 +337,22 @@ export default [
       'import/no-dynamic-require': 'error',
       'import/no-webpack-loader-syntax': 'error',
 
-      // Node.js Rules
-      'node/no-deprecated-api': 'error',
-      'node/no-extraneous-import': 'off',
-      'node/no-extraneous-require': 'off',
-      'node/no-missing-import': 'off',
-      'node/no-missing-require': 'off',
-      'node/no-unpublished-import': 'off',
-      'node/no-unpublished-require': 'off',
-      'node/no-unsupported-features/es-syntax': 'off',
-      'node/prefer-global/buffer': ['error', 'always'],
-      'node/prefer-global/console': ['error', 'always'],
-      'node/prefer-global/process': ['error', 'always'],
-      'node/prefer-global/url-search-params': ['error', 'always'],
-      'node/prefer-global/url': ['error', 'always'],
-      'node/prefer-promises/dns': 'error',
-      'node/prefer-promises/fs': 'error',
+      // Node.js Rules (using eslint-plugin-n)
+      'n/no-deprecated-api': 'error',
+      'n/no-extraneous-import': 'off',
+      'n/no-extraneous-require': 'off',
+      'n/no-missing-import': 'off',
+      'n/no-missing-require': 'off',
+      'n/no-unpublished-import': 'off',
+      'n/no-unpublished-require': 'off',
+      'n/no-unsupported-features/es-syntax': 'off',
+      'n/prefer-global/buffer': 'off',
+      'n/prefer-global/console': 'off',
+      'n/prefer-global/process': 'off',
+      'n/prefer-global/url-search-params': 'off',
+      'n/prefer-global/url': 'off',
+      'n/prefer-promises/dns': 'error',
+      'n/prefer-promises/fs': 'error',
     },
     settings: {
       'import/resolver': {
