@@ -72,7 +72,8 @@ export class ExportService {
       // Generate filename
       const timestamp = format(new Date(), 'yyyy-MM-dd_HH-mm-ss');
       const filename = `loans_export_${timestamp}.${options.format}`;
-      const filePath = options.outputPath || path.join(this.exportDir, filename);
+      const filePath =
+        options.outputPath || path.join(this.exportDir, filename);
 
       // Export based on format
       let fileSize = 0;
@@ -102,12 +103,13 @@ export class ExportService {
         fileSize,
         recordCount: sortedLoans.length,
         format: options.format,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       };
 
-      this.logger.info(`Export completed: ${filename} (${sortedLoans.length} records)`);
+      this.logger.info(
+        `Export completed: ${filename} (${sortedLoans.length} records)`
+      );
       return result;
-
     } catch (error) {
       this.logger.error('Export failed', error as Error);
       return {
@@ -117,12 +119,16 @@ export class ExportService {
         recordCount: 0,
         format: options.format,
         timestamp: new Date().toISOString(),
-        error: (error as Error).message
+        error: (error as Error).message,
       };
     }
   }
 
-  async exportToText(loans: LoanModel[], filePath: string, options: ExportOptions): Promise<number> {
+  async exportToText(
+    loans: LoanModel[],
+    filePath: string,
+    options: ExportOptions
+  ): Promise<number> {
     let content = '';
 
     // Add metadata if requested
@@ -163,7 +169,11 @@ export class ExportService {
     return stats.size;
   }
 
-  async exportToCsv(loans: LoanModel[], filePath: string, options: ExportOptions): Promise<number> {
+  async exportToCsv(
+    loans: LoanModel[],
+    filePath: string,
+    options: ExportOptions
+  ): Promise<number> {
     const records = loans.map(loan => ({
       id: loan.id,
       lender_name: loan.lenderName,
@@ -175,7 +185,7 @@ export class ExportService {
       is_paid: loan.isPaid,
       is_overdue: loan.isOverdue(),
       status: loan.isPaid ? 'PAID' : loan.isOverdue() ? 'OVERDUE' : 'PENDING',
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
     }));
 
     const csvWriter = createObjectCsvWriter({
@@ -191,8 +201,8 @@ export class ExportService {
         { id: 'is_paid', title: 'Is Paid' },
         { id: 'is_overdue', title: 'Is Overdue' },
         { id: 'status', title: 'Status' },
-        { id: 'created_at', title: 'Export Date' }
-      ]
+        { id: 'created_at', title: 'Export Date' },
+      ],
     });
 
     await csvWriter.writeRecords(records);
@@ -200,15 +210,21 @@ export class ExportService {
     return stats.size;
   }
 
-  async exportToJson(loans: LoanModel[], filePath: string, options: ExportOptions): Promise<number> {
+  async exportToJson(
+    loans: LoanModel[],
+    filePath: string,
+    options: ExportOptions
+  ): Promise<number> {
     const exportData = {
-      metadata: options.includeMetadata ? this.generateMetadata(loans, options) : undefined,
+      metadata: options.includeMetadata
+        ? this.generateMetadata(loans, options)
+        : undefined,
       summary: {
         totalLoans: loans.length,
         totalAmount: this.calculateTotalAmount(loans),
         paidLoans: loans.filter(l => l.isPaid).length,
         overdueLoans: loans.filter(l => l.isOverdue()).length,
-        pendingLoans: loans.filter(l => !l.isPaid && !l.isOverdue()).length
+        pendingLoans: loans.filter(l => !l.isPaid && !l.isOverdue()).length,
       },
       loans: loans.map(loan => ({
         id: loan.id,
@@ -220,8 +236,8 @@ export class ExportService {
         repaymentDate: loan.repaymentDate,
         isPaid: loan.isPaid,
         isOverdue: loan.isOverdue(),
-        status: loan.isPaid ? 'PAID' : loan.isOverdue() ? 'OVERDUE' : 'PENDING'
-      }))
+        status: loan.isPaid ? 'PAID' : loan.isOverdue() ? 'OVERDUE' : 'PENDING',
+      })),
     };
 
     await fs.writeFile(filePath, JSON.stringify(exportData, null, 2), 'utf-8');
@@ -229,7 +245,11 @@ export class ExportService {
     return stats.size;
   }
 
-  async exportToPdf(loans: LoanModel[], filePath: string, options: ExportOptions): Promise<number> {
+  async exportToPdf(
+    loans: LoanModel[],
+    filePath: string,
+    options: ExportOptions
+  ): Promise<number> {
     return new Promise((resolve, reject) => {
       try {
         const doc = new PDFDocument({ margin: 50 });
@@ -237,8 +257,14 @@ export class ExportService {
         doc.pipe(stream);
 
         // Header
-        doc.fontSize(20).text('LoanTrack Pro - Loan Export Report', { align: 'center' });
-        doc.fontSize(12).text(`Generated on: ${format(new Date(), 'PPP')}`, { align: 'center' });
+        doc
+          .fontSize(20)
+          .text('LoanTrack Pro - Loan Export Report', { align: 'center' });
+        doc
+          .fontSize(12)
+          .text(`Generated on: ${format(new Date(), 'PPP')}`, {
+            align: 'center',
+          });
         doc.moveDown(2);
 
         // Summary
@@ -246,10 +272,14 @@ export class ExportService {
         doc.moveDown(0.5);
         doc.fontSize(12);
         doc.text(`Total Loans: ${loans.length}`);
-        doc.text(`Total Amount: ${formatCurrency(this.calculateTotalAmount(loans))}`);
+        doc.text(
+          `Total Amount: ${formatCurrency(this.calculateTotalAmount(loans))}`
+        );
         doc.text(`Paid Loans: ${loans.filter(l => l.isPaid).length}`);
         doc.text(`Overdue Loans: ${loans.filter(l => l.isOverdue()).length}`);
-        doc.text(`Pending Loans: ${loans.filter(l => !l.isPaid && !l.isOverdue()).length}`);
+        doc.text(
+          `Pending Loans: ${loans.filter(l => !l.isPaid && !l.isOverdue()).length}`
+        );
         doc.moveDown(2);
 
         // Loan Details
@@ -261,16 +291,22 @@ export class ExportService {
             doc.addPage();
           }
 
-          doc.fontSize(14).text(`${index + 1}. ${loan.lenderName}`, { underline: true });
+          doc
+            .fontSize(14)
+            .text(`${index + 1}. ${loan.lenderName}`, { underline: true });
           doc.fontSize(10);
           doc.text(`Phone: ${loan.phoneNumber}`);
           doc.text(`Amount: ${formatCurrency(loan.amount)}`);
           if (loan.interestRate) {
             doc.text(`Interest: ${loan.interestRate}%`);
-            doc.text(`Total with Interest: ${formatCurrency(loan.calculateTotalWithInterest())}`);
+            doc.text(
+              `Total with Interest: ${formatCurrency(loan.calculateTotalWithInterest())}`
+            );
           }
           doc.text(`Due Date: ${format(new Date(loan.repaymentDate), 'PPP')}`);
-          doc.text(`Status: ${loan.isPaid ? 'PAID' : loan.isOverdue() ? 'OVERDUE' : 'PENDING'}`);
+          doc.text(
+            `Status: ${loan.isPaid ? 'PAID' : loan.isOverdue() ? 'OVERDUE' : 'PENDING'}`
+          );
           doc.text(`ID: ${loan.id}`);
           doc.moveDown(1);
         });
@@ -283,14 +319,17 @@ export class ExportService {
         });
 
         stream.on('error', reject);
-
       } catch (error) {
         reject(error);
       }
     });
   }
 
-  async exportToHtml(loans: LoanModel[], filePath: string, options: ExportOptions): Promise<number> {
+  async exportToHtml(
+    loans: LoanModel[],
+    filePath: string,
+    options: ExportOptions
+  ): Promise<number> {
     const html = `
 <!DOCTYPE html>
 <html lang="en">
@@ -341,7 +380,9 @@ export class ExportService {
             </tr>
         </thead>
         <tbody>
-            ${loans.map(loan => `
+            ${loans
+              .map(
+                loan => `
                 <tr>
                     <td>${loan.lenderName}</td>
                     <td>${loan.phoneNumber}</td>
@@ -353,7 +394,9 @@ export class ExportService {
                         ${loan.isPaid ? 'PAID' : loan.isOverdue() ? 'OVERDUE' : 'PENDING'}
                     </td>
                 </tr>
-            `).join('')}
+            `
+              )
+              .join('')}
         </tbody>
     </table>
 
@@ -373,9 +416,14 @@ export class ExportService {
   async getExportHistory(): Promise<ExportResult[]> {
     try {
       const files = await fs.readdir(this.exportDir);
-      const exportFiles = files.filter(file => 
-        file.startsWith('loans_export_') && 
-        (file.endsWith('.txt') || file.endsWith('.csv') || file.endsWith('.json') || file.endsWith('.pdf') || file.endsWith('.html'))
+      const exportFiles = files.filter(
+        file =>
+          file.startsWith('loans_export_') &&
+          (file.endsWith('.txt') ||
+            file.endsWith('.csv') ||
+            file.endsWith('.json') ||
+            file.endsWith('.pdf') ||
+            file.endsWith('.html'))
       );
 
       const history: ExportResult[] = [];
@@ -385,22 +433,27 @@ export class ExportService {
           const filePath = path.join(this.exportDir, file);
           const stats = await fs.stat(filePath);
           const format = path.extname(file).substring(1);
-          
+
           history.push({
             success: true,
             filePath,
             fileSize: stats.size,
             recordCount: 0, // Would need to parse file to get this
             format,
-            timestamp: stats.mtime.toISOString()
+            timestamp: stats.mtime.toISOString(),
           });
         } catch (error) {
-          this.logger.warn(`Failed to read export file stats: ${file}`, error as Error);
+          this.logger.warn(
+            `Failed to read export file stats: ${file}`,
+            error as Error
+          );
         }
       }
 
-      return history.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
+      return history.sort(
+        (a, b) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
     } catch (error) {
       this.logger.error('Failed to get export history', error as Error);
       return [];
@@ -413,7 +466,10 @@ export class ExportService {
       this.logger.info(`Export file deleted: ${filePath}`);
       return true;
     } catch (error) {
-      this.logger.error(`Failed to delete export file: ${filePath}`, error as Error);
+      this.logger.error(
+        `Failed to delete export file: ${filePath}`,
+        error as Error
+      );
       return false;
     }
   }
@@ -438,7 +494,6 @@ export class ExportService {
 
       this.logger.info(`Cleaned up ${deletedCount} old export files`);
       return deletedCount;
-
     } catch (error) {
       this.logger.error('Failed to cleanup old exports', error as Error);
       return 0;
@@ -453,7 +508,9 @@ export class ExportService {
     }
 
     if (options.filterOverdue !== undefined) {
-      filtered = filtered.filter(loan => loan.isOverdue() === options.filterOverdue);
+      filtered = filtered.filter(
+        loan => loan.isOverdue() === options.filterOverdue
+      );
     }
 
     return filtered;
@@ -496,10 +553,16 @@ export class ExportService {
   }
 
   private calculateTotalAmount(loans: LoanModel[]): number {
-    return loans.reduce((total, loan) => total + loan.calculateTotalWithInterest(), 0);
+    return loans.reduce(
+      (total, loan) => total + loan.calculateTotalWithInterest(),
+      0
+    );
   }
 
-  private generateMetadata(loans: LoanModel[], options: ExportOptions): ExportMetadata {
+  private generateMetadata(
+    loans: LoanModel[],
+    options: ExportOptions
+  ): ExportMetadata {
     return {
       exportedAt: new Date().toISOString(),
       exportedBy: 'LoanTrack Pro v2.0.0',
@@ -509,15 +572,18 @@ export class ExportService {
         filterPaid: options.filterPaid,
         filterOverdue: options.filterOverdue,
         sortBy: options.sortBy,
-        sortOrder: options.sortOrder
+        sortOrder: options.sortOrder,
       },
-      format: options.format
+      format: options.format,
     };
   }
 
-  private generateTextMetadata(loans: LoanModel[], options: ExportOptions): string {
+  private generateTextMetadata(
+    loans: LoanModel[],
+    options: ExportOptions
+  ): string {
     const metadata = this.generateMetadata(loans, options);
-    
+
     return `
 EXPORT METADATA
 ===============

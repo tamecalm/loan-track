@@ -80,7 +80,10 @@ export class ConfigManager {
       await this.loadConfig();
       this.logger.info('Configuration manager initialized successfully');
     } catch (error) {
-      this.logger.error('Failed to initialize configuration manager', error as Error);
+      this.logger.error(
+        'Failed to initialize configuration manager',
+        error as Error
+      );
       throw error;
     }
   }
@@ -99,10 +102,10 @@ export class ConfigManager {
     try {
       const configData = await fs.readFile(this.configPath, 'utf-8');
       const loadedConfig = JSON.parse(configData) as AppConfig;
-      
+
       // Merge with defaults to ensure all properties exist
       this.config = this.mergeWithDefaults(loadedConfig);
-      
+
       this.logger.info('Configuration loaded successfully');
     } catch (error) {
       if ((error as any).code === 'ENOENT') {
@@ -135,60 +138,63 @@ export class ConfigManager {
         tableStyle: 'grid',
         dateFormat: 'uk',
         showColors: true,
-        animationSpeed: 'normal'
+        animationSpeed: 'normal',
       },
       currency: {
         currency: 'NGN',
         symbol: '₦',
         position: 'before',
         decimalPlaces: 2,
-        thousandsSeparator: ','
+        thousandsSeparator: ',',
       },
       notifications: {
         dueDateReminders: true,
         reminderDays: 3,
         overdueAlerts: true,
         soundNotifications: false,
-        emailNotifications: false
+        emailNotifications: false,
       },
       storage: {
         dataDirectory: path.join(__dirname, '../../data'),
         autoSave: true,
         backupDirectory: path.join(__dirname, '../../backups'),
         maxFileSize: '10MB',
-        compression: true
+        compression: true,
       },
       security: {
         dataEncryption: false,
         passwordProtection: false,
         sessionTimeout: '1h',
         auditLogging: false,
-        autoLock: false
+        autoLock: false,
       },
       locale: {
         language: 'en-NG',
         region: 'Africa/Lagos',
         timezone: 'WAT',
         firstDayOfWeek: 'monday',
-        numberFormat: 'uk'
+        numberFormat: 'uk',
       },
       version: '2.0.0',
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
     };
   }
 
   private mergeWithDefaults(loadedConfig: Partial<AppConfig>): AppConfig {
     const defaults = this.getDefaultConfig();
-    
+
     return {
       display: { ...defaults.display, ...loadedConfig.display },
       currency: { ...defaults.currency, ...loadedConfig.currency },
-      notifications: { ...defaults.notifications, ...loadedConfig.notifications },
+      notifications: {
+        ...defaults.notifications,
+        ...loadedConfig.notifications,
+      },
       storage: { ...defaults.storage, ...loadedConfig.storage },
       security: { ...defaults.security, ...loadedConfig.security },
       locale: { ...defaults.locale, ...loadedConfig.locale },
       version: loadedConfig.version || defaults.version,
-      lastUpdated: loadedConfig.lastUpdated || defaults.lastUpdated
+      lastUpdated: loadedConfig.lastUpdated || defaults.lastUpdated,
     };
   }
 
@@ -197,7 +203,9 @@ export class ConfigManager {
     return { ...this.config.display };
   }
 
-  async updateDisplaySettings(settings: Partial<DisplaySettings>): Promise<void> {
+  async updateDisplaySettings(
+    settings: Partial<DisplaySettings>
+  ): Promise<void> {
     this.config.display = { ...this.config.display, ...settings };
     await this.saveConfig();
     this.logger.info('Display settings updated', settings);
@@ -208,7 +216,9 @@ export class ConfigManager {
     return { ...this.config.currency };
   }
 
-  async updateCurrencySettings(settings: Partial<CurrencySettings>): Promise<void> {
+  async updateCurrencySettings(
+    settings: Partial<CurrencySettings>
+  ): Promise<void> {
     this.config.currency = { ...this.config.currency, ...settings };
     await this.saveConfig();
     this.logger.info('Currency settings updated', settings);
@@ -219,7 +229,9 @@ export class ConfigManager {
     return { ...this.config.notifications };
   }
 
-  async updateNotificationSettings(settings: Partial<NotificationSettings>): Promise<void> {
+  async updateNotificationSettings(
+    settings: Partial<NotificationSettings>
+  ): Promise<void> {
     this.config.notifications = { ...this.config.notifications, ...settings };
     await this.saveConfig();
     this.logger.info('Notification settings updated', settings);
@@ -230,7 +242,9 @@ export class ConfigManager {
     return { ...this.config.storage };
   }
 
-  async updateStorageSettings(settings: Partial<StorageSettings>): Promise<void> {
+  async updateStorageSettings(
+    settings: Partial<StorageSettings>
+  ): Promise<void> {
     this.config.storage = { ...this.config.storage, ...settings };
     await this.saveConfig();
     this.logger.info('Storage settings updated', settings);
@@ -241,7 +255,9 @@ export class ConfigManager {
     return { ...this.config.security };
   }
 
-  async updateSecuritySettings(settings: Partial<SecuritySettings>): Promise<void> {
+  async updateSecuritySettings(
+    settings: Partial<SecuritySettings>
+  ): Promise<void> {
     this.config.security = { ...this.config.security, ...settings };
     await this.saveConfig();
     this.logger.info('Security settings updated', settings);
@@ -273,11 +289,18 @@ export class ConfigManager {
     try {
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const backupFilename = `config-backup-${timestamp}.json`;
-      const backupPath = path.join(this.config.storage.backupDirectory, backupFilename);
-      
+      const backupPath = path.join(
+        this.config.storage.backupDirectory,
+        backupFilename
+      );
+
       await fs.mkdir(path.dirname(backupPath), { recursive: true });
-      await fs.writeFile(backupPath, JSON.stringify(this.config, null, 2), 'utf-8');
-      
+      await fs.writeFile(
+        backupPath,
+        JSON.stringify(this.config, null, 2),
+        'utf-8'
+      );
+
       this.logger.info('Configuration backup created', { backupPath });
       return backupPath;
     } catch (error) {
@@ -298,12 +321,12 @@ export class ConfigManager {
   }> {
     try {
       const exportData: any = {};
-      
+
       if (options.includeMetadata) {
         exportData.metadata = {
           exportDate: new Date().toISOString(),
           version: this.config.version,
-          exportedBy: 'LoanTrack Pro'
+          exportedBy: 'LoanTrack Pro',
         };
       }
 
@@ -333,21 +356,27 @@ export class ConfigManager {
         }
       });
 
-      const exportPath = path.join(this.config.storage.dataDirectory, options.filename);
+      const exportPath = path.join(
+        this.config.storage.dataDirectory,
+        options.filename
+      );
       const exportContent = JSON.stringify(exportData, null, 2);
-      
+
       await fs.writeFile(exportPath, exportContent, 'utf-8');
-      
+
       const stats = await fs.stat(exportPath);
       const sizeInKB = (stats.size / 1024).toFixed(2);
 
-      this.logger.info('Settings exported successfully', { exportPath, sections: options.sections });
+      this.logger.info('Settings exported successfully', {
+        exportPath,
+        sections: options.sections,
+      });
 
       return {
         filename: options.filename,
         path: exportPath,
         size: `${sizeInKB} KB`,
-        sections: options.sections
+        sections: options.sections,
       };
     } catch (error) {
       this.logger.error('Failed to export settings', error as Error);
@@ -375,7 +404,9 @@ export class ConfigManager {
       const importData = JSON.parse(importContent);
 
       // Validate import data
-      const sections = Object.keys(importData).filter(key => key !== 'metadata');
+      const sections = Object.keys(importData).filter(
+        key => key !== 'metadata'
+      );
       const conflicts = this.countConfigConflicts(importData);
 
       if (options.mode === 'preview') {
@@ -383,7 +414,7 @@ export class ConfigManager {
           filename: path.basename(options.filename),
           valid: true,
           sections,
-          conflicts
+          conflicts,
         };
       }
 
@@ -403,10 +434,10 @@ export class ConfigManager {
 
       await this.saveConfig();
 
-      this.logger.info('Settings imported successfully', { 
-        filename: options.filename, 
+      this.logger.info('Settings imported successfully', {
+        filename: options.filename,
         mode: options.mode,
-        sections 
+        sections,
       });
 
       return {
@@ -418,7 +449,7 @@ export class ConfigManager {
         conflictsResolved: conflicts,
         backupCreated,
         loansRestored: 0, // Config manager doesn't handle loans
-        settingsRestored: true
+        settingsRestored: true,
       };
     } catch (error) {
       this.logger.error('Failed to import settings', error as Error);
@@ -428,15 +459,21 @@ export class ConfigManager {
 
   private countConfigConflicts(importData: any): number {
     let conflicts = 0;
-    
+
     Object.keys(importData).forEach(section => {
       if (section !== 'metadata' && this.config[section as keyof AppConfig]) {
         const currentSection = this.config[section as keyof AppConfig];
         const importSection = importData[section];
-        
-        if (typeof currentSection === 'object' && typeof importSection === 'object') {
+
+        if (
+          typeof currentSection === 'object' &&
+          typeof importSection === 'object'
+        ) {
           Object.keys(importSection).forEach(key => {
-            if (currentSection[key as keyof typeof currentSection] !== importSection[key]) {
+            if (
+              currentSection[key as keyof typeof currentSection] !==
+              importSection[key]
+            ) {
               conflicts++;
             }
           });
@@ -447,7 +484,10 @@ export class ConfigManager {
     return conflicts;
   }
 
-  private mergeConfigs(current: AppConfig, imported: Partial<AppConfig>): AppConfig {
+  private mergeConfigs(
+    current: AppConfig,
+    imported: Partial<AppConfig>
+  ): AppConfig {
     const merged: AppConfig = { ...current };
 
     // Handle each section individually with proper type safety
@@ -460,7 +500,10 @@ export class ConfigManager {
     }
 
     if (imported.notifications) {
-      merged.notifications = { ...current.notifications, ...imported.notifications };
+      merged.notifications = {
+        ...current.notifications,
+        ...imported.notifications,
+      };
     }
 
     if (imported.storage) {
@@ -492,12 +535,19 @@ export class ConfigManager {
 
     try {
       // Validate display settings
-      if (!['rainbow', 'blue', 'green', 'purple', 'mono'].includes(this.config.display.theme)) {
+      if (
+        !['rainbow', 'blue', 'green', 'purple', 'mono'].includes(
+          this.config.display.theme
+        )
+      ) {
         errors.push('Invalid display theme');
       }
 
       // Validate currency settings
-      if (this.config.currency.decimalPlaces < 0 || this.config.currency.decimalPlaces > 4) {
+      if (
+        this.config.currency.decimalPlaces < 0 ||
+        this.config.currency.decimalPlaces > 4
+      ) {
         errors.push('Invalid decimal places for currency');
       }
 
@@ -507,29 +557,39 @@ export class ConfigManager {
       }
 
       // Validate storage settings
-      if (!this.config.storage.dataDirectory || this.config.storage.dataDirectory.trim() === '') {
+      if (
+        !this.config.storage.dataDirectory ||
+        this.config.storage.dataDirectory.trim() === ''
+      ) {
         errors.push('Data directory cannot be empty');
       }
 
       // Validate security settings
-      if (!['15m', '30m', '1h', '2h', 'never'].includes(this.config.security.sessionTimeout)) {
+      if (
+        !['15m', '30m', '1h', '2h', 'never'].includes(
+          this.config.security.sessionTimeout
+        )
+      ) {
         errors.push('Invalid session timeout value');
       }
 
       // Validate locale settings
-      if (!this.config.locale.language || this.config.locale.language.trim() === '') {
+      if (
+        !this.config.locale.language ||
+        this.config.locale.language.trim() === ''
+      ) {
         errors.push('Language setting cannot be empty');
       }
 
       return {
         valid: errors.length === 0,
-        errors
+        errors,
       };
     } catch (error) {
       this.logger.error('Error validating configuration', error as Error);
       return {
         valid: false,
-        errors: ['Configuration validation failed']
+        errors: ['Configuration validation failed'],
       };
     }
   }
@@ -559,7 +619,7 @@ export class ConfigManager {
         lastUpdated: this.config.lastUpdated,
         version: this.config.version,
         configSize: `${sizeInKB} KB`,
-        isValid: validation.valid
+        isValid: validation.valid,
       };
     } catch (error) {
       this.logger.error('Failed to get config summary', error as Error);
@@ -575,58 +635,63 @@ export class ConfigManager {
         secondary: 'magenta',
         success: 'green',
         warning: 'yellow',
-        error: 'red'
+        error: 'red',
       },
       blue: {
         primary: 'blue',
         secondary: 'cyan',
         success: 'green',
         warning: 'yellow',
-        error: 'red'
+        error: 'red',
       },
       green: {
         primary: 'green',
         secondary: 'cyan',
         success: 'green',
         warning: 'yellow',
-        error: 'red'
+        error: 'red',
       },
       purple: {
         primary: 'magenta',
         secondary: 'blue',
         success: 'green',
         warning: 'yellow',
-        error: 'red'
+        error: 'red',
       },
       mono: {
         primary: 'white',
         secondary: 'gray',
         success: 'white',
         warning: 'white',
-        error: 'white'
-      }
+        error: 'white',
+      },
     };
 
-    return themes[this.config.display.theme as keyof typeof themes] || themes.rainbow;
+    return (
+      themes[this.config.display.theme as keyof typeof themes] || themes.rainbow
+    );
   }
 
   formatCurrency(amount: number): string {
-    const { symbol, position, decimalPlaces, thousandsSeparator } = this.config.currency;
-    
+    const { symbol, position, decimalPlaces, thousandsSeparator } =
+      this.config.currency;
+
     let formattedAmount = amount.toFixed(decimalPlaces);
-    
+
     if (thousandsSeparator) {
       const parts = formattedAmount.split('.');
       parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, thousandsSeparator);
       formattedAmount = parts.join('.');
     }
-    
-    return position === 'before' ? `${symbol}${formattedAmount}` : `${formattedAmount}${symbol}`;
+
+    return position === 'before'
+      ? `${symbol}${formattedAmount}`
+      : `${formattedAmount}${symbol}`;
   }
 
   formatDate(date: string | Date): string {
     const dateObj = typeof date === 'string' ? new Date(date) : date;
-    
+
     switch (this.config.display.dateFormat) {
       case 'uk':
         return dateObj.toLocaleDateString('en-GB');
@@ -635,10 +700,10 @@ export class ConfigManager {
       case 'iso':
         return dateObj.toISOString().split('T')[0];
       case 'verbose':
-        return dateObj.toLocaleDateString('en-GB', { 
-          day: '2-digit', 
-          month: 'short', 
-          year: 'numeric' 
+        return dateObj.toLocaleDateString('en-GB', {
+          day: '2-digit',
+          month: 'short',
+          year: 'numeric',
         });
       default:
         return dateObj.toLocaleDateString('en-GB');

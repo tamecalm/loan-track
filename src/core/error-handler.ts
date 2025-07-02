@@ -38,10 +38,10 @@ export class ErrorHandler {
       // Setup global error handlers
       this.setupProcessErrorHandlers();
       this.setupPromiseRejectionHandlers();
-      
+
       // Initialize error reporting system
       this.initializeErrorReporting();
-      
+
       this.initialized = true;
       this.logger.info('Error handler setup completed successfully');
     } catch (error) {
@@ -54,7 +54,7 @@ export class ErrorHandler {
     process.on('uncaughtException', (error: Error) => {
       this.handleCriticalError('UNCAUGHT_EXCEPTION', error, {
         operation: 'process_execution',
-        additionalData: { pid: process.pid }
+        additionalData: { pid: process.pid },
       });
     });
 
@@ -69,7 +69,7 @@ export class ErrorHandler {
     });
 
     // Handle exit
-    process.on('exit', (code) => {
+    process.on('exit', code => {
       if (code !== 0) {
         this.logger.error(`Process exiting with code: ${code}`);
       }
@@ -79,19 +79,20 @@ export class ErrorHandler {
   private setupPromiseRejectionHandlers(): void {
     // Handle unhandled promise rejections
     process.on('unhandledRejection', (reason: any, promise: Promise<any>) => {
-      const error = reason instanceof Error ? reason : new Error(String(reason));
-      
+      const error =
+        reason instanceof Error ? reason : new Error(String(reason));
+
       this.handleCriticalError('UNHANDLED_REJECTION', error, {
         operation: 'promise_execution',
-        additionalData: { 
+        additionalData: {
           reason: String(reason),
-          promiseState: 'rejected'
-        }
+          promiseState: 'rejected',
+        },
       });
     });
 
     // Handle warning events
-    process.on('warning', (warning) => {
+    process.on('warning', warning => {
       this.handleWarning(warning);
     });
   }
@@ -136,27 +137,32 @@ export class ErrorHandler {
 
   // Public error handling methods
   async handleError(
-    type: string, 
-    error: Error, 
+    type: string,
+    error: Error,
     context: ErrorContext = {},
     severity: 'low' | 'medium' | 'high' | 'critical' = 'medium'
   ): Promise<string> {
     try {
-      const errorReport = this.createErrorReport(type, error, context, severity);
-      
+      const errorReport = this.createErrorReport(
+        type,
+        error,
+        context,
+        severity
+      );
+
       // Log the error
       this.logger.error(`${type}: ${error.message}`, error);
-      
+
       // Add to error reports
       this.errorReports.push(errorReport);
       await this.saveErrorReports();
-      
+
       // Display user-friendly error message
       this.displayErrorToUser(errorReport);
-      
+
       // Handle based on severity
       await this.handleBySeverity(errorReport);
-      
+
       return errorReport.id;
     } catch (handlingError) {
       console.error(chalk.red('Error in error handler:'), handlingError);
@@ -164,24 +170,37 @@ export class ErrorHandler {
     }
   }
 
-  async handleCriticalError(type: string, error: Error, context: ErrorContext = {}): Promise<void> {
+  async handleCriticalError(
+    type: string,
+    error: Error,
+    context: ErrorContext = {}
+  ): Promise<void> {
     const errorId = await this.handleError(type, error, context, 'critical');
-    
-    console.log(boxen(
-      chalk.red.bold('💥 CRITICAL ERROR DETECTED') + '\n\n' +
-      chalk.white('Error ID: ') + chalk.yellow(errorId) + '\n' +
-      chalk.white('Type: ') + chalk.red(type) + '\n' +
-      chalk.white('Message: ') + chalk.white(error.message) + '\n\n' +
-      chalk.gray('The application will attempt to recover gracefully.\n') +
-      chalk.gray('Error details have been logged for investigation.'),
-      {
-        padding: 1,
-        margin: 1,
-        borderStyle: 'double',
-        borderColor: 'red',
-        textAlignment: 'left'
-      }
-    ));
+
+    console.log(
+      boxen(
+        chalk.red.bold('💥 CRITICAL ERROR DETECTED') +
+          '\n\n' +
+          chalk.white('Error ID: ') +
+          chalk.yellow(errorId) +
+          '\n' +
+          chalk.white('Type: ') +
+          chalk.red(type) +
+          '\n' +
+          chalk.white('Message: ') +
+          chalk.white(error.message) +
+          '\n\n' +
+          chalk.gray('The application will attempt to recover gracefully.\n') +
+          chalk.gray('Error details have been logged for investigation.'),
+        {
+          padding: 1,
+          margin: 1,
+          borderStyle: 'double',
+          borderColor: 'red',
+          textAlignment: 'left',
+        }
+      )
+    );
 
     // For critical errors, we might want to exit gracefully
     if (type === 'UNCAUGHT_EXCEPTION') {
@@ -192,68 +211,119 @@ export class ErrorHandler {
     }
   }
 
-  async handleValidationError(field: string, value: any, expectedType: string): Promise<string> {
-    const error = new Error(`Invalid ${field}: expected ${expectedType}, got ${typeof value}`);
-    
-    return await this.handleError('VALIDATION_ERROR', error, {
-      operation: 'data_validation',
-      additionalData: { field, value, expectedType }
-    }, 'low');
+  async handleValidationError(
+    field: string,
+    value: any,
+    expectedType: string
+  ): Promise<string> {
+    const error = new Error(
+      `Invalid ${field}: expected ${expectedType}, got ${typeof value}`
+    );
+
+    return await this.handleError(
+      'VALIDATION_ERROR',
+      error,
+      {
+        operation: 'data_validation',
+        additionalData: { field, value, expectedType },
+      },
+      'low'
+    );
   }
 
-  async handleFileSystemError(operation: string, filePath: string, error: Error): Promise<string> {
-    return await this.handleError('FILESYSTEM_ERROR', error, {
-      operation: `filesystem_${operation}`,
-      additionalData: { filePath, operation }
-    }, 'medium');
+  async handleFileSystemError(
+    operation: string,
+    filePath: string,
+    error: Error
+  ): Promise<string> {
+    return await this.handleError(
+      'FILESYSTEM_ERROR',
+      error,
+      {
+        operation: `filesystem_${operation}`,
+        additionalData: { filePath, operation },
+      },
+      'medium'
+    );
   }
 
-  async handleDatabaseError(operation: string, error: Error, query?: string): Promise<string> {
-    return await this.handleError('DATABASE_ERROR', error, {
-      operation: `database_${operation}`,
-      additionalData: { query }
-    }, 'high');
+  async handleDatabaseError(
+    operation: string,
+    error: Error,
+    query?: string
+  ): Promise<string> {
+    return await this.handleError(
+      'DATABASE_ERROR',
+      error,
+      {
+        operation: `database_${operation}`,
+        additionalData: { query },
+      },
+      'high'
+    );
   }
 
   async handleNetworkError(url: string, error: Error): Promise<string> {
-    return await this.handleError('NETWORK_ERROR', error, {
-      operation: 'network_request',
-      additionalData: { url }
-    }, 'medium');
+    return await this.handleError(
+      'NETWORK_ERROR',
+      error,
+      {
+        operation: 'network_request',
+        additionalData: { url },
+      },
+      'medium'
+    );
   }
 
-  async handleUserInputError(input: string, expectedFormat: string): Promise<string> {
+  async handleUserInputError(
+    input: string,
+    expectedFormat: string
+  ): Promise<string> {
     const error = new Error(`Invalid user input: expected ${expectedFormat}`);
-    
-    return await this.handleError('USER_INPUT_ERROR', error, {
-      operation: 'user_input_validation',
-      additionalData: { input, expectedFormat }
-    }, 'low');
+
+    return await this.handleError(
+      'USER_INPUT_ERROR',
+      error,
+      {
+        operation: 'user_input_validation',
+        additionalData: { input, expectedFormat },
+      },
+      'low'
+    );
   }
 
   private handleWarning(warning: Error): void {
     this.logger.warn(`Process warning: ${warning.message}`, warning);
-    
+
     // Display warning to user if it's important
-    if (warning.name === 'DeprecationWarning' || warning.name === 'ExperimentalWarning') {
+    if (
+      warning.name === 'DeprecationWarning' ||
+      warning.name === 'ExperimentalWarning'
+    ) {
       console.log(chalk.yellow(`⚠️  ${warning.name}: ${warning.message}`));
     }
   }
 
   private handleGracefulShutdown(signal: string): void {
-    console.log(boxen(
-      chalk.cyan.bold('🛑 GRACEFUL SHUTDOWN INITIATED') + '\n\n' +
-      chalk.white('Signal: ') + chalk.yellow(signal) + '\n' +
-      chalk.white('Saving data and cleaning up...') + '\n\n' +
-      chalk.gray('Thank you for using LoanTrack Pro!'),
-      {
-        padding: 1,
-        margin: 1,
-        borderStyle: 'round',
-        borderColor: 'cyan',
-        textAlignment: 'center'
-      }
-    ));
+    console.log(
+      boxen(
+        chalk.cyan.bold('🛑 GRACEFUL SHUTDOWN INITIATED') +
+          '\n\n' +
+          chalk.white('Signal: ') +
+          chalk.yellow(signal) +
+          '\n' +
+          chalk.white('Saving data and cleaning up...') +
+          '\n\n' +
+          chalk.gray('Thank you for using LoanTrack Pro!'),
+        {
+          padding: 1,
+          margin: 1,
+          borderStyle: 'round',
+          borderColor: 'cyan',
+          textAlignment: 'center',
+        }
+      )
+    );
 
     // Perform cleanup operations
     this.performCleanup()
@@ -261,7 +331,7 @@ export class ErrorHandler {
         console.log(chalk.green('✅ Cleanup completed successfully'));
         process.exit(0);
       })
-      .catch((error) => {
+      .catch(error => {
         console.error(chalk.red('❌ Error during cleanup:'), error);
         process.exit(1);
       });
@@ -271,10 +341,10 @@ export class ErrorHandler {
     try {
       // Save any pending error reports
       await this.saveErrorReports();
-      
+
       // Log shutdown
       this.logger.info('Application shutdown completed');
-      
+
       // Give time for async operations to complete
       await new Promise(resolve => setTimeout(resolve, 500));
     } catch (error) {
@@ -283,9 +353,9 @@ export class ErrorHandler {
   }
 
   private createErrorReport(
-    type: string, 
-    error: Error, 
-    context: ErrorContext, 
+    type: string,
+    error: Error,
+    context: ErrorContext,
     severity: 'low' | 'medium' | 'high' | 'critical'
   ): ErrorReport {
     const timestamp = new Date().toISOString();
@@ -298,11 +368,11 @@ export class ErrorHandler {
       context: {
         ...context,
         timestamp,
-        stackTrace: error.stack
+        stackTrace: error.stack,
       },
       severity,
       timestamp,
-      resolved: false
+      resolved: false,
     };
   }
 
@@ -311,14 +381,14 @@ export class ErrorHandler {
       low: 'yellow',
       medium: 'magenta',
       high: 'red',
-      critical: 'red'
+      critical: 'red',
     } as const;
 
     const severityIcons = {
       low: '⚠️',
       medium: '🔶',
       high: '🔴',
-      critical: '💥'
+      critical: '💥',
     };
 
     const colorName = severityColors[errorReport.severity];
@@ -326,24 +396,32 @@ export class ErrorHandler {
 
     // Only show user-friendly errors for non-critical issues
     if (errorReport.severity !== 'critical') {
-      const coloredTitle = this.getChalkColor(colorName)(`${icon} ${errorReport.type.replace(/_/g, ' ')}`);
-      
-      console.log(boxen(
-        coloredTitle + '\n\n' +
-        chalk.white(this.getUserFriendlyMessage(errorReport)) + '\n\n' +
-        chalk.gray(`Error ID: ${errorReport.id}`),
-        {
-          padding: 1,
-          margin: 1,
-          borderStyle: 'round',
-          borderColor: colorName,
-          textAlignment: 'left'
-        }
-      ));
+      const coloredTitle = this.getChalkColor(colorName)(
+        `${icon} ${errorReport.type.replace(/_/g, ' ')}`
+      );
+
+      console.log(
+        boxen(
+          coloredTitle +
+            '\n\n' +
+            chalk.white(this.getUserFriendlyMessage(errorReport)) +
+            '\n\n' +
+            chalk.gray(`Error ID: ${errorReport.id}`),
+          {
+            padding: 1,
+            margin: 1,
+            borderStyle: 'round',
+            borderColor: colorName,
+            textAlignment: 'left',
+          }
+        )
+      );
     }
   }
 
-  private getChalkColor(colorName: 'yellow' | 'magenta' | 'red'): (text: string) => string {
+  private getChalkColor(
+    colorName: 'yellow' | 'magenta' | 'red'
+  ): (text: string) => string {
     switch (colorName) {
       case 'yellow':
         return chalk.yellow;
@@ -403,42 +481,54 @@ export class ErrorHandler {
           break;
         default:
           // Generic recovery attempt
-          this.logger.info(`Attempting generic recovery for ${errorReport.type}`);
+          this.logger.info(
+            `Attempting generic recovery for ${errorReport.type}`
+          );
       }
     } catch (recoveryError) {
       this.logger.error('Recovery attempt failed', recoveryError as Error);
     }
   }
 
-  private async recoverFromFileSystemError(errorReport: ErrorReport): Promise<void> {
+  private async recoverFromFileSystemError(
+    errorReport: ErrorReport
+  ): Promise<void> {
     const filePath = errorReport.context.additionalData?.filePath;
-    
+
     if (filePath) {
       try {
         // Attempt to create directory if it doesn't exist
         const dir = path.dirname(filePath);
         await fs.mkdir(dir, { recursive: true });
-        
+
         this.logger.info(`Created missing directory: ${dir}`);
         errorReport.resolved = true;
         await this.saveErrorReports();
       } catch (error) {
-        this.logger.error('Failed to recover from filesystem error', error as Error);
+        this.logger.error(
+          'Failed to recover from filesystem error',
+          error as Error
+        );
       }
     }
   }
 
-  private async recoverFromDatabaseError(errorReport: ErrorReport): Promise<void> {
+  private async recoverFromDatabaseError(
+    errorReport: ErrorReport
+  ): Promise<void> {
     try {
       // Attempt to recreate data directory
       const dataDir = path.join(__dirname, '../../data');
       await fs.mkdir(dataDir, { recursive: true });
-      
+
       this.logger.info('Recreated data directory for database recovery');
       errorReport.resolved = true;
       await this.saveErrorReports();
     } catch (error) {
-      this.logger.error('Failed to recover from database error', error as Error);
+      this.logger.error(
+        'Failed to recover from database error',
+        error as Error
+      );
     }
   }
 
@@ -466,7 +556,10 @@ export class ErrorHandler {
       }
     }
 
-    return reports.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+    return reports.sort(
+      (a, b) =>
+        new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+    );
   }
 
   async getErrorStatistics(): Promise<{
@@ -480,10 +573,12 @@ export class ErrorHandler {
     const total = this.errorReports.length;
     const resolved = this.errorReports.filter(r => r.resolved).length;
     const unresolved = total - resolved;
-    
+
     // Errors in the last 24 hours
     const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000);
-    const recentErrors = this.errorReports.filter(r => new Date(r.timestamp) >= yesterday).length;
+    const recentErrors = this.errorReports.filter(
+      r => new Date(r.timestamp) >= yesterday
+    ).length;
 
     const bySeverity: Record<string, number> = {};
     const byType: Record<string, number> = {};
@@ -499,35 +594,37 @@ export class ErrorHandler {
       byType,
       resolved,
       unresolved,
-      recentErrors
+      recentErrors,
     };
   }
 
   async markErrorAsResolved(errorId: string): Promise<boolean> {
     const errorIndex = this.errorReports.findIndex(r => r.id === errorId);
-    
+
     if (errorIndex !== -1) {
       this.errorReports[errorIndex].resolved = true;
       await this.saveErrorReports();
       return true;
     }
-    
+
     return false;
   }
 
   async clearOldErrors(olderThanDays: number = 30): Promise<number> {
-    const cutoffDate = new Date(Date.now() - olderThanDays * 24 * 60 * 60 * 1000);
-    const initialCount = this.errorReports.length;
-    
-    this.errorReports = this.errorReports.filter(report => 
-      new Date(report.timestamp) >= cutoffDate || !report.resolved
+    const cutoffDate = new Date(
+      Date.now() - olderThanDays * 24 * 60 * 60 * 1000
     );
-    
+    const initialCount = this.errorReports.length;
+
+    this.errorReports = this.errorReports.filter(
+      report => new Date(report.timestamp) >= cutoffDate || !report.resolved
+    );
+
     await this.saveErrorReports();
-    
+
     const removedCount = initialCount - this.errorReports.length;
     this.logger.info(`Cleared ${removedCount} old error reports`);
-    
+
     return removedCount;
   }
 
@@ -537,12 +634,12 @@ export class ErrorHandler {
         exportDate: new Date().toISOString(),
         totalErrors: this.errorReports.length,
         statistics: await this.getErrorStatistics(),
-        errors: this.errorReports
+        errors: this.errorReports,
       };
 
       const data = JSON.stringify(exportData, null, 2);
       await fs.writeFile(filePath, data, 'utf-8');
-      
+
       this.logger.info(`Error reports exported to: ${filePath}`);
     } catch (error) {
       throw new Error(`Failed to export error reports: ${error}`);
@@ -564,25 +661,26 @@ export class ErrorHandler {
     const stats = await this.getErrorStatistics();
     const criticalErrors = stats.bySeverity.critical || 0;
     const recentErrors = stats.recentErrors;
-    
+
     let status: 'healthy' | 'warning' | 'critical' = 'healthy';
-    
+
     if (criticalErrors > 0) {
       status = 'critical';
     } else if (recentErrors > 5 || stats.unresolved > 10) {
       status = 'warning';
     }
 
-    const lastError = this.errorReports.length > 0 
-      ? this.errorReports[this.errorReports.length - 1].message 
-      : undefined;
+    const lastError =
+      this.errorReports.length > 0
+        ? this.errorReports[this.errorReports.length - 1].message
+        : undefined;
 
     return {
       status,
       errorCount: stats.total,
       criticalErrors,
       recentErrors,
-      lastError
+      lastError,
     };
   }
 
@@ -597,7 +695,7 @@ export class ErrorHandler {
     } catch (error) {
       await this.handleError('WRAPPED_OPERATION_ERROR', error as Error, {
         ...context,
-        operation: operationName
+        operation: operationName,
       });
       return null;
     }
@@ -614,7 +712,7 @@ export class ErrorHandler {
     } catch (error) {
       this.handleError('WRAPPED_OPERATION_ERROR', error as Error, {
         ...context,
-        operation: operationName
+        operation: operationName,
       });
       return null;
     }

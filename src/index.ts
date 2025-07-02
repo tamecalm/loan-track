@@ -4,7 +4,7 @@ import { AppController } from './controllers/app.controller';
 
 async function main(): Promise<void> {
   const app = new AppController();
-  
+
   try {
     await app.initialize();
   } catch (error) {
@@ -25,7 +25,7 @@ process.on('SIGTERM', async () => {
 });
 
 // Handle uncaught exceptions
-process.on('uncaughtException', (error) => {
+process.on('uncaughtException', error => {
   console.error('Uncaught Exception:', error);
   process.exit(1);
 });
@@ -36,7 +36,7 @@ process.on('unhandledRejection', (reason, promise) => {
 });
 
 // Start the application
-main().catch((error) => {
+main().catch(error => {
   console.error('Application startup failed:', error);
   process.exit(1);
 });

@@ -46,7 +46,7 @@ export class Logger {
       includeStackTrace: true,
       colorize: true,
       silentInit: true, // New option to silence initialization
-      ...config
+      ...config,
     };
 
     this.logFilePath = path.join(
@@ -62,13 +62,13 @@ export class Logger {
       await this.ensureLogDirectory();
       await this.rotateLogsIfNeeded();
       this.isInitialized = true;
-      
+
       // Only log initialization if not in silent mode
       if (!this.config.silentInit) {
         this.info('Logger initialized successfully', {
           sessionId: this.sessionId,
           logFile: this.logFilePath,
-          config: this.config
+          config: this.config,
         });
       }
     } catch (error) {
@@ -97,18 +97,21 @@ export class Logger {
       info: 1,
       warn: 2,
       error: 3,
-      fatal: 4
+      fatal: 4,
     };
     return priorities[level];
   }
 
   private shouldLog(level: LogLevel): boolean {
-    return this.getLogLevelPriority(level) >= this.getLogLevelPriority(this.config.level);
+    return (
+      this.getLogLevelPriority(level) >=
+      this.getLogLevelPriority(this.config.level)
+    );
   }
 
   private formatTimestamp(): string {
     const now = new Date();
-    
+
     switch (this.config.dateFormat) {
       case 'ISO':
         return now.toISOString();
@@ -123,34 +126,34 @@ export class Logger {
 
   private formatLogEntry(entry: LogEntry): string {
     const { timestamp, level, message, error, context } = entry;
-    
+
     let logLine = `[${timestamp}] [${level.toUpperCase()}] [${this.sessionId}] ${message}`;
-    
+
     if (context && Object.keys(context).length > 0) {
       logLine += ` | Context: ${JSON.stringify(context)}`;
     }
-    
+
     if (error) {
       logLine += ` | Error: ${error.message}`;
       if (this.config.includeStackTrace && error.stack) {
         logLine += ` | Stack: ${error.stack}`;
       }
     }
-    
+
     return logLine;
   }
 
   private getConsoleColor(level: LogLevel): string {
     if (!this.config.colorize) return 'white';
-    
+
     const colors = {
       debug: 'gray',
       info: 'cyan',
       warn: 'yellow',
       error: 'red',
-      fatal: 'magenta'
+      fatal: 'magenta',
     };
-    
+
     return colors[level];
   }
 
@@ -160,33 +163,38 @@ export class Logger {
       info: 'ℹ️',
       warn: '⚠️',
       error: '❌',
-      fatal: '💥'
+      fatal: '💥',
     };
-    
+
     return icons[level];
   }
 
   private async writeToConsole(entry: LogEntry): Promise<void> {
     if (!this.config.enableConsole) return;
-    
+
     const color = this.getConsoleColor(entry.level) as keyof typeof chalk;
     const icon = this.getConsoleIcon(entry.level);
     const timestamp = new Date(entry.timestamp).toLocaleTimeString();
-    
+
     let consoleMessage = `${icon} ${chalk.gray(timestamp)} ${(chalk as any)[color](entry.level.toUpperCase())} ${entry.message}`;
-    
+
     if (entry.context && Object.keys(entry.context).length > 0) {
       consoleMessage += chalk.gray(` | ${JSON.stringify(entry.context)}`);
     }
-    
+
     if (entry.error) {
       consoleMessage += chalk.red(` | ${entry.error.message}`);
     }
-    
+
     console.log(consoleMessage);
-    
+
     // Show stack trace for errors if enabled
-    if (entry.error && this.config.includeStackTrace && entry.error.stack && entry.level === 'error') {
+    if (
+      entry.error &&
+      this.config.includeStackTrace &&
+      entry.error.stack &&
+      entry.level === 'error'
+    ) {
       console.log(chalk.gray(entry.error.stack));
     }
   }
@@ -197,7 +205,7 @@ export class Logger {
       this.logBuffer.push(entry);
       return;
     }
-    
+
     try {
       // Write buffered entries first
       if (this.logBuffer.length > 0) {
@@ -207,11 +215,11 @@ export class Logger {
         }
         this.logBuffer = [];
       }
-      
+
       // Write current entry
       const logLine = this.formatLogEntry(entry) + '\n';
       await fs.appendFile(this.logFilePath, logLine, 'utf-8');
-      
+
       // Check if log rotation is needed
       await this.rotateLogsIfNeeded();
     } catch (error) {
@@ -226,7 +234,7 @@ export class Logger {
     try {
       const stats = await fs.stat(this.logFilePath);
       const fileSizeInMB = stats.size / (1024 * 1024);
-      
+
       if (fileSizeInMB >= this.config.maxFileSize) {
         await this.rotateLogs();
       }
@@ -244,18 +252,21 @@ export class Logger {
     try {
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
       const rotatedFileName = `loantrack-${timestamp}.log`;
-      const rotatedFilePath = path.join(this.config.logDirectory, rotatedFileName);
-      
+      const rotatedFilePath = path.join(
+        this.config.logDirectory,
+        rotatedFileName
+      );
+
       // Move current log file to rotated name
       await fs.rename(this.logFilePath, rotatedFilePath);
-      
+
       // Clean up old log files
       await this.cleanupOldLogs();
-      
+
       if (!this.config.silentInit) {
-        this.info('Log file rotated', { 
-          oldFile: this.logFilePath, 
-          newFile: rotatedFilePath 
+        this.info('Log file rotated', {
+          oldFile: this.logFilePath,
+          newFile: rotatedFilePath,
         });
       }
     } catch (error) {
@@ -272,18 +283,18 @@ export class Logger {
         .filter(file => file.startsWith('loantrack-') && file.endsWith('.log'))
         .map(file => ({
           name: file,
-          path: path.join(this.config.logDirectory, file)
+          path: path.join(this.config.logDirectory, file),
         }));
-      
+
       if (logFiles.length > this.config.maxFiles) {
         // Sort by creation time and remove oldest files
         const filesWithStats = await Promise.all(
           logFiles.map(async file => ({
             ...file,
-            stats: await fs.stat(file.path)
+            stats: await fs.stat(file.path),
           }))
         );
-        
+
         filesWithStats
           .sort((a, b) => a.stats.mtime.getTime() - b.stats.mtime.getTime())
           .slice(0, filesWithStats.length - this.config.maxFiles)
@@ -295,7 +306,10 @@ export class Logger {
               }
             } catch (error) {
               if (this.config.enableConsole) {
-                console.error(chalk.red(`Failed to delete old log file ${file.name}:`), error);
+                console.error(
+                  chalk.red(`Failed to delete old log file ${file.name}:`),
+                  error
+                );
               }
             }
           });
@@ -307,23 +321,25 @@ export class Logger {
     }
   }
 
-  private async log(level: LogLevel, message: string, error?: Error, context?: any): Promise<void> {
+  private async log(
+    level: LogLevel,
+    message: string,
+    error?: Error,
+    context?: any
+  ): Promise<void> {
     if (!this.shouldLog(level)) return;
-    
+
     const entry: LogEntry = {
       timestamp: this.formatTimestamp(),
       level,
       message,
       error,
       context,
-      sessionId: this.sessionId
+      sessionId: this.sessionId,
     };
-    
+
     // Write to console and file concurrently
-    await Promise.all([
-      this.writeToConsole(entry),
-      this.writeToFile(entry)
-    ]);
+    await Promise.all([this.writeToConsole(entry), this.writeToFile(entry)]);
   }
 
   // Public logging methods
@@ -352,9 +368,9 @@ export class Logger {
     const oldLevel = this.config.level;
     this.config.level = level;
     if (!this.config.silentInit) {
-      await this.info('Log level changed', { 
-        from: oldLevel, 
-        to: level 
+      await this.info('Log level changed', {
+        from: oldLevel,
+        to: level,
       });
     }
   }
@@ -392,17 +408,17 @@ export class Logger {
     try {
       const stats = await fs.stat(this.logFilePath);
       const fileSizeInKB = (stats.size / 1024).toFixed(2);
-      
+
       const files = await fs.readdir(this.config.logDirectory);
-      const logFiles = files.filter(file => 
-        file.startsWith('loantrack-') && file.endsWith('.log')
+      const logFiles = files.filter(
+        file => file.startsWith('loantrack-') && file.endsWith('.log')
       );
-      
+
       // Count logs for today (approximate)
       const today = new Date().toISOString().split('T')[0];
       const todayLogFile = `loantrack-${today}.log`;
       let logsToday = 0;
-      
+
       try {
         const todayLogPath = path.join(this.config.logDirectory, todayLogFile);
         const todayLogContent = await fs.readFile(todayLogPath, 'utf-8');
@@ -410,45 +426,50 @@ export class Logger {
       } catch {
         // File doesn't exist or can't be read
       }
-      
+
       return {
         currentLogFile: path.basename(this.logFilePath),
         logFileSize: `${fileSizeInKB} KB`,
         totalLogFiles: logFiles.length,
         sessionId: this.sessionId,
         logLevel: this.config.level,
-        logsToday
+        logsToday,
       };
     } catch (error) {
       throw new Error(`Failed to get log stats: ${error}`);
     }
   }
 
-  async exportLogs(outputPath: string, options?: {
-    startDate?: Date;
-    endDate?: Date;
-    levels?: LogLevel[];
-    includeContext?: boolean;
-  }): Promise<void> {
+  async exportLogs(
+    outputPath: string,
+    options?: {
+      startDate?: Date;
+      endDate?: Date;
+      levels?: LogLevel[];
+      includeContext?: boolean;
+    }
+  ): Promise<void> {
     try {
       const files = await fs.readdir(this.config.logDirectory);
       const logFiles = files
         .filter(file => file.startsWith('loantrack-') && file.endsWith('.log'))
         .map(file => path.join(this.config.logDirectory, file));
-      
+
       let allLogs = '';
-      
+
       for (const logFile of logFiles) {
         try {
           const content = await fs.readFile(logFile, 'utf-8');
           allLogs += content;
         } catch (error) {
           if (this.config.enableConsole) {
-            console.warn(chalk.yellow(`Warning: Could not read log file ${logFile}`));
+            console.warn(
+              chalk.yellow(`Warning: Could not read log file ${logFile}`)
+            );
           }
         }
       }
-      
+
       // Filter logs based on options
       if (options) {
         const lines = allLogs.split('\n').filter(line => line.trim());
@@ -456,35 +477,38 @@ export class Logger {
           // Parse log line to check filters
           const timestampMatch = line.match(/\[(.*?)\]/);
           const levelMatch = line.match(/\[(\w+)\]/g);
-          
-          if (!timestampMatch || !levelMatch || levelMatch.length < 2) return true;
-          
+
+          if (!timestampMatch || !levelMatch || levelMatch.length < 2)
+            return true;
+
           const timestamp = new Date(timestampMatch[1]);
-          const level = levelMatch[1].replace(/[\[\]]/g, '').toLowerCase() as LogLevel;
-          
+          const level = levelMatch[1]
+            .replace(/[\[\]]/g, '')
+            .toLowerCase() as LogLevel;
+
           // Date filter
           if (options.startDate && timestamp < options.startDate) return false;
           if (options.endDate && timestamp > options.endDate) return false;
-          
+
           // Level filter
           if (options.levels && !options.levels.includes(level)) return false;
-          
+
           // Context filter
           if (options.includeContext === false && line.includes('Context:')) {
             return line.replace(/\| Context:.*?(?=\||\s*$)/, '');
           }
-          
+
           return true;
         });
-        
+
         allLogs = filteredLines.join('\n');
       }
-      
+
       await fs.writeFile(outputPath, allLogs, 'utf-8');
       if (!this.config.silentInit) {
-        await this.info('Logs exported successfully', { 
-          outputPath, 
-          options 
+        await this.info('Logs exported successfully', {
+          outputPath,
+          options,
         });
       }
     } catch (error) {
@@ -499,11 +523,11 @@ export class Logger {
       const logFiles = files
         .filter(file => file.startsWith('loantrack-') && file.endsWith('.log'))
         .map(file => path.join(this.config.logDirectory, file));
-      
+
       for (const logFile of logFiles) {
         await fs.unlink(logFile);
       }
-      
+
       if (!this.config.silentInit) {
         await this.info('All log files cleared');
       }
@@ -515,25 +539,30 @@ export class Logger {
     }
   }
 
-  async searchLogs(query: string, options?: {
-    caseSensitive?: boolean;
-    regex?: boolean;
-    level?: LogLevel;
-    startDate?: Date;
-    endDate?: Date;
-  }): Promise<Array<{
-    file: string;
-    line: number;
-    content: string;
-    timestamp: string;
-    level: LogLevel;
-  }>> {
+  async searchLogs(
+    query: string,
+    options?: {
+      caseSensitive?: boolean;
+      regex?: boolean;
+      level?: LogLevel;
+      startDate?: Date;
+      endDate?: Date;
+    }
+  ): Promise<
+    Array<{
+      file: string;
+      line: number;
+      content: string;
+      timestamp: string;
+      level: LogLevel;
+    }>
+  > {
     try {
       const files = await fs.readdir(this.config.logDirectory);
       const logFiles = files
         .filter(file => file.startsWith('loantrack-') && file.endsWith('.log'))
         .map(file => path.join(this.config.logDirectory, file));
-      
+
       const results: Array<{
         file: string;
         line: number;
@@ -541,43 +570,48 @@ export class Logger {
         timestamp: string;
         level: LogLevel;
       }> = [];
-      
+
       for (const logFile of logFiles) {
         try {
           const content = await fs.readFile(logFile, 'utf-8');
           const lines = content.split('\n');
-          
+
           lines.forEach((line, index) => {
             if (!line.trim()) return;
-            
+
             // Parse log line
             const timestampMatch = line.match(/\[(.*?)\]/);
             const levelMatch = line.match(/\[(\w+)\]/g);
-            
+
             if (!timestampMatch || !levelMatch || levelMatch.length < 2) return;
-            
+
             const timestamp = timestampMatch[1];
-            const level = levelMatch[1].replace(/[\[\]]/g, '').toLowerCase() as LogLevel;
+            const level = levelMatch[1]
+              .replace(/[\[\]]/g, '')
+              .toLowerCase() as LogLevel;
             const logDate = new Date(timestamp);
-            
+
             // Apply filters
             if (options?.level && level !== options.level) return;
             if (options?.startDate && logDate < options.startDate) return;
             if (options?.endDate && logDate > options.endDate) return;
-            
+
             // Search in content
             let searchText = line;
             let searchQuery = query;
-            
+
             if (!options?.caseSensitive) {
               searchText = searchText.toLowerCase();
               searchQuery = searchQuery.toLowerCase();
             }
-            
+
             let matches = false;
             if (options?.regex) {
               try {
-                const regex = new RegExp(searchQuery, options.caseSensitive ? 'g' : 'gi');
+                const regex = new RegExp(
+                  searchQuery,
+                  options.caseSensitive ? 'g' : 'gi'
+                );
                 matches = regex.test(searchText);
               } catch {
                 // Invalid regex, fall back to string search
@@ -586,27 +620,35 @@ export class Logger {
             } else {
               matches = searchText.includes(searchQuery);
             }
-            
+
             if (matches) {
               results.push({
                 file: path.basename(logFile),
                 line: index + 1,
                 content: line,
                 timestamp,
-                level
+                level,
               });
             }
           });
         } catch (error) {
           if (this.config.enableConsole) {
-            console.warn(chalk.yellow(`Warning: Could not search in log file ${logFile}`));
+            console.warn(
+              chalk.yellow(`Warning: Could not search in log file ${logFile}`)
+            );
           }
         }
       }
-      
-      return results.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+      return results.sort(
+        (a, b) =>
+          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+      );
     } catch (error) {
-      await this.error('Failed to search logs', error as Error, { query, options });
+      await this.error('Failed to search logs', error as Error, {
+        query,
+        options,
+      });
       throw error;
     }
   }
@@ -617,22 +659,26 @@ export class Logger {
     if (!this.config.silentInit) {
       await this.debug(`Timer started: ${label}`);
     }
-    
+
     return async () => {
       const endTime = process.hrtime.bigint();
       const duration = Number(endTime - startTime) / 1000000; // Convert to milliseconds
       if (!this.config.silentInit) {
-        await this.info(`Timer completed: ${label}`, { 
-          duration: `${duration.toFixed(2)}ms` 
+        await this.info(`Timer completed: ${label}`, {
+          duration: `${duration.toFixed(2)}ms`,
         });
       }
     };
   }
 
-  async logPerformance(operation: string, duration: number, context?: any): Promise<void> {
+  async logPerformance(
+    operation: string,
+    duration: number,
+    context?: any
+  ): Promise<void> {
     await this.info(`Performance: ${operation}`, {
       duration: `${duration.toFixed(2)}ms`,
-      ...context
+      ...context,
     });
   }
 
@@ -640,42 +686,51 @@ export class Logger {
   async logSystemInfo(): Promise<void> {
     const memUsage = process.memoryUsage();
     const uptime = process.uptime();
-    
+
     await this.info('System information', {
       memory: {
         rss: `${(memUsage.rss / 1024 / 1024).toFixed(2)} MB`,
         heapTotal: `${(memUsage.heapTotal / 1024 / 1024).toFixed(2)} MB`,
         heapUsed: `${(memUsage.heapUsed / 1024 / 1024).toFixed(2)} MB`,
-        external: `${(memUsage.external / 1024 / 1024).toFixed(2)} MB`
+        external: `${(memUsage.external / 1024 / 1024).toFixed(2)} MB`,
       },
       uptime: `${(uptime / 60).toFixed(2)} minutes`,
       nodeVersion: process.version,
       platform: process.platform,
-      arch: process.arch
+      arch: process.arch,
     });
   }
 
   // Structured logging for specific events
-  async logUserAction(action: string, userId?: string, details?: any): Promise<void> {
+  async logUserAction(
+    action: string,
+    userId?: string,
+    details?: any
+  ): Promise<void> {
     await this.info(`User action: ${action}`, {
       userId: userId || 'anonymous',
       action,
       details,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
   }
 
-  async logDatabaseOperation(operation: string, table: string, duration?: number, error?: Error): Promise<void> {
+  async logDatabaseOperation(
+    operation: string,
+    table: string,
+    duration?: number,
+    error?: Error
+  ): Promise<void> {
     const level = error ? 'error' : 'info';
     const message = `Database ${operation}: ${table}`;
-    
+
     const context = {
       operation,
       table,
       duration: duration ? `${duration.toFixed(2)}ms` : undefined,
-      success: !error
+      success: !error,
     };
-    
+
     if (level === 'error') {
       await this.error(message, error, context);
     } else {
@@ -683,12 +738,17 @@ export class Logger {
     }
   }
 
-  async logApiRequest(method: string, endpoint: string, statusCode?: number, duration?: number): Promise<void> {
+  async logApiRequest(
+    method: string,
+    endpoint: string,
+    statusCode?: number,
+    duration?: number
+  ): Promise<void> {
     await this.info(`API ${method} ${endpoint}`, {
       method,
       endpoint,
       statusCode,
-      duration: duration ? `${duration.toFixed(2)}ms` : undefined
+      duration: duration ? `${duration.toFixed(2)}ms` : undefined,
     });
   }
 

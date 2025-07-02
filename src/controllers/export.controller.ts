@@ -29,13 +29,12 @@ export class ExportController {
       this.displayExportHeader();
 
       const choice = await this.getExportMenuChoice();
-      
+
       if (choice === 'back') {
         return;
       }
 
       await this.handleExportChoice(choice);
-
     } catch (error) {
       this.logger.error('Error in export menu', error as Error);
       console.error(chalk.red('❌ Failed to load export menu'));
@@ -44,17 +43,18 @@ export class ExportController {
 
   private displayExportHeader(): void {
     const header = boxen(
-      chalk.magenta.bold('📤 DATA EXPORT CENTER') + '\n' +
-      chalk.gray('Export Your Loan Data in Multiple Formats'),
+      chalk.magenta.bold('📤 DATA EXPORT CENTER') +
+        '\n' +
+        chalk.gray('Export Your Loan Data in Multiple Formats'),
       {
         padding: 1,
         margin: 1,
         borderStyle: 'double',
         borderColor: 'magenta',
-        textAlignment: 'center'
+        textAlignment: 'center',
       }
     );
-    
+
     console.log(header);
   }
 
@@ -64,31 +64,43 @@ export class ExportController {
     const totalDebt = this.loanService.getTotalDebt(loans);
 
     // Show quick stats
-    console.log(boxen(
-      chalk.cyan('📊 Export Overview') + '\n\n' +
-      chalk.white('Total Loans: ') + chalk.yellow(loanCount.toString()) + '\n' +
-      chalk.white('Total Debt: ') + chalk.green(formatCurrency(totalDebt)) + '\n' +
-      chalk.white('Ready for Export: ') + (loanCount > 0 ? chalk.green('Yes') : chalk.red('No')),
-      {
-        padding: 1,
-        margin: 1,
-        borderStyle: 'round',
-        borderColor: 'cyan',
-        textAlignment: 'left'
-      }
-    ));
-
-    if (loanCount === 0) {
-      console.log(boxen(
-        chalk.yellow('📂 No data available for export.\nAdd some loans first to enable export features!'),
+    console.log(
+      boxen(
+        chalk.cyan('📊 Export Overview') +
+          '\n\n' +
+          chalk.white('Total Loans: ') +
+          chalk.yellow(loanCount.toString()) +
+          '\n' +
+          chalk.white('Total Debt: ') +
+          chalk.green(formatCurrency(totalDebt)) +
+          '\n' +
+          chalk.white('Ready for Export: ') +
+          (loanCount > 0 ? chalk.green('Yes') : chalk.red('No')),
         {
           padding: 1,
           margin: 1,
           borderStyle: 'round',
-          borderColor: 'yellow',
-          textAlignment: 'center'
+          borderColor: 'cyan',
+          textAlignment: 'left',
         }
-      ));
+      )
+    );
+
+    if (loanCount === 0) {
+      console.log(
+        boxen(
+          chalk.yellow(
+            '📂 No data available for export.\nAdd some loans first to enable export features!'
+          ),
+          {
+            padding: 1,
+            margin: 1,
+            borderStyle: 'round',
+            borderColor: 'yellow',
+            textAlignment: 'center',
+          }
+        )
+      );
       return 'back';
     }
 
@@ -100,44 +112,44 @@ export class ExportController {
         choices: [
           {
             name: `${chalk.green('📄')} PDF Report (Professional)`,
-            value: 'pdf'
+            value: 'pdf',
           },
           {
             name: `${chalk.blue('📊')} Excel Spreadsheet (.xlsx)`,
-            value: 'excel'
+            value: 'excel',
           },
           {
             name: `${chalk.cyan('📋')} CSV File (Comma Separated)`,
-            value: 'csv'
+            value: 'csv',
           },
           {
             name: `${chalk.yellow('📝')} Text Report (.txt)`,
-            value: 'text'
+            value: 'text',
           },
           {
             name: `${chalk.magenta('🔗')} JSON Data (.json)`,
-            value: 'json'
+            value: 'json',
           },
           {
             name: `${chalk.yellow('📈')} Analytics Report`,
-            value: 'analytics'
+            value: 'analytics',
           },
           {
             name: `${chalk.red('📧')} Email Report`,
-            value: 'email'
+            value: 'email',
           },
           {
             name: `${chalk.green('🎯')} Custom Export`,
-            value: 'custom'
+            value: 'custom',
           },
           new inquirer.Separator(),
           {
             name: `${chalk.gray('🔙')} Back to Main Menu`,
-            value: 'back'
-          }
+            value: 'back',
+          },
         ],
-        pageSize: 12
-      }
+        pageSize: 12,
+      },
     ]);
 
     return choice;
@@ -178,16 +190,18 @@ export class ExportController {
           type: 'confirm',
           name: 'exportAnother',
           message: 'Would you like to export in another format?',
-          default: false
-        }
+          default: false,
+        },
       ]);
 
       if (exportAnother) {
         await this.showExportMenu();
       }
-
     } catch (error) {
-      this.logger.error(`Error handling export choice: ${choice}`, error as Error);
+      this.logger.error(
+        `Error handling export choice: ${choice}`,
+        error as Error
+      );
       console.error(chalk.red(`❌ Failed to export as ${choice}`));
     }
   }
@@ -201,7 +215,8 @@ export class ExportController {
         name: 'filename',
         message: 'Enter PDF filename:',
         default: `loan-report-${new Date().toISOString().split('T')[0]}.pdf`,
-        validate: (input) => input.trim().length > 0 || 'Filename cannot be empty'
+        validate: input =>
+          input.trim().length > 0 || 'Filename cannot be empty',
       },
       {
         type: 'list',
@@ -211,8 +226,8 @@ export class ExportController {
           { name: '📊 Professional Report', value: 'professional' },
           { name: '📋 Simple List', value: 'simple' },
           { name: '📈 Analytics Summary', value: 'analytics' },
-          { name: '💼 Business Format', value: 'business' }
-        ]
+          { name: '💼 Business Format', value: 'business' },
+        ],
       },
       {
         type: 'checkbox',
@@ -224,9 +239,9 @@ export class ExportController {
           { name: 'Payment Status', value: 'status', checked: true },
           { name: 'Overdue Analysis', value: 'overdue', checked: true },
           { name: 'Financial Analytics', value: 'analytics', checked: false },
-          { name: 'Charts & Graphs', value: 'charts', checked: false }
+          { name: 'Charts & Graphs', value: 'charts', checked: false },
         ],
-        validate: (input) => input.length > 0 || 'Select at least one section'
+        validate: input => input.length > 0 || 'Select at least one section',
       },
       {
         type: 'list',
@@ -234,47 +249,63 @@ export class ExportController {
         message: 'Page orientation:',
         choices: [
           { name: 'Portrait', value: 'portrait' },
-          { name: 'Landscape', value: 'landscape' }
+          { name: 'Landscape', value: 'landscape' },
         ],
-        default: 'portrait'
+        default: 'portrait',
       },
       {
         type: 'confirm',
         name: 'includeCharts',
         message: 'Include visual charts and graphs?',
-        default: true
-      }
+        default: true,
+      },
     ]);
 
     const spinner = createSpinner('Generating PDF report...').start();
 
     try {
       const loans = await this.loanService.getLoans();
-      const filePath = path.join(process.cwd(), 'data', 'exports', pdfOptions.filename);
-      
+      const filePath = path.join(
+        process.cwd(),
+        'data',
+        'exports',
+        pdfOptions.filename
+      );
+
       const fileSize = await this.exportService.exportToPdf(loans, filePath, {
         format: 'pdf',
-        includeMetadata: true
+        includeMetadata: true,
       });
 
       spinner.success({ text: 'PDF report generated successfully!' });
 
-      console.log(boxen(
-        chalk.green('✅ PDF Export Complete!') + '\n\n' +
-        chalk.cyan('📁 File: ') + chalk.white(pdfOptions.filename) + '\n' +
-        chalk.cyan('📍 Location: ') + chalk.white(filePath) + '\n' +
-        chalk.cyan('📊 Records: ') + chalk.white(loans.length.toString()) + '\n' +
-        chalk.cyan('📏 Size: ') + chalk.white(`${Math.round(fileSize / 1024)} KB`) + '\n' +
-        chalk.cyan('🕒 Generated: ') + chalk.white(new Date().toLocaleString()),
-        {
-          padding: 1,
-          margin: 1,
-          borderStyle: 'round',
-          borderColor: 'green',
-          textAlignment: 'left'
-        }
-      ));
-
+      console.log(
+        boxen(
+          chalk.green('✅ PDF Export Complete!') +
+            '\n\n' +
+            chalk.cyan('📁 File: ') +
+            chalk.white(pdfOptions.filename) +
+            '\n' +
+            chalk.cyan('📍 Location: ') +
+            chalk.white(filePath) +
+            '\n' +
+            chalk.cyan('📊 Records: ') +
+            chalk.white(loans.length.toString()) +
+            '\n' +
+            chalk.cyan('📏 Size: ') +
+            chalk.white(`${Math.round(fileSize / 1024)} KB`) +
+            '\n' +
+            chalk.cyan('🕒 Generated: ') +
+            chalk.white(new Date().toLocaleString()),
+          {
+            padding: 1,
+            margin: 1,
+            borderStyle: 'round',
+            borderColor: 'green',
+            textAlignment: 'left',
+          }
+        )
+      );
     } catch (error) {
       spinner.error({ text: 'Failed to generate PDF' });
       throw error;
@@ -284,18 +315,23 @@ export class ExportController {
   private async exportToExcel(): Promise<void> {
     console.log('\n' + chalk.bold('📊 Excel Export'));
 
-    console.log(boxen(
-      chalk.yellow('⚠️ Excel Export Not Available') + '\n\n' +
-      chalk.white('Excel export functionality is not yet implemented.\n') +
-      chalk.white('Please use CSV export as an alternative for spreadsheet data.'),
-      {
-        padding: 1,
-        margin: 1,
-        borderStyle: 'round',
-        borderColor: 'yellow',
-        textAlignment: 'center'
-      }
-    ));
+    console.log(
+      boxen(
+        chalk.yellow('⚠️ Excel Export Not Available') +
+          '\n\n' +
+          chalk.white('Excel export functionality is not yet implemented.\n') +
+          chalk.white(
+            'Please use CSV export as an alternative for spreadsheet data.'
+          ),
+        {
+          padding: 1,
+          margin: 1,
+          borderStyle: 'round',
+          borderColor: 'yellow',
+          textAlignment: 'center',
+        }
+      )
+    );
   }
 
   private async exportToCSV(): Promise<void> {
@@ -307,7 +343,8 @@ export class ExportController {
         name: 'filename',
         message: 'Enter CSV filename:',
         default: `loan-data-${new Date().toISOString().split('T')[0]}.csv`,
-        validate: (input) => input.trim().length > 0 || 'Filename cannot be empty'
+        validate: input =>
+          input.trim().length > 0 || 'Filename cannot be empty',
       },
       {
         type: 'list',
@@ -317,9 +354,9 @@ export class ExportController {
           { name: 'Comma (,)', value: ',' },
           { name: 'Semicolon (;)', value: ';' },
           { name: 'Tab', value: '\t' },
-          { name: 'Pipe (|)', value: '|' }
+          { name: 'Pipe (|)', value: '|' },
         ],
-        default: ','
+        default: ',',
       },
       {
         type: 'checkbox',
@@ -331,13 +368,17 @@ export class ExportController {
           { name: 'Phone Number', value: 'phoneNumber', checked: true },
           { name: 'Amount', value: 'amount', checked: true },
           { name: 'Interest Rate', value: 'interestRate', checked: true },
-          { name: 'Total with Interest', value: 'totalWithInterest', checked: true },
+          {
+            name: 'Total with Interest',
+            value: 'totalWithInterest',
+            checked: true,
+          },
           { name: 'Repayment Date', value: 'repaymentDate', checked: true },
           { name: 'Status', value: 'status', checked: true },
           { name: 'Days Overdue', value: 'daysOverdue', checked: false },
-          { name: 'Created Date', value: 'createdDate', checked: false }
+          { name: 'Created Date', value: 'createdDate', checked: false },
         ],
-        validate: (input) => input.length > 0 || 'Select at least one field'
+        validate: input => input.length > 0 || 'Select at least one field',
       },
       {
         type: 'list',
@@ -346,47 +387,63 @@ export class ExportController {
         choices: [
           { name: 'UTF-8 (Recommended)', value: 'utf8' },
           { name: 'UTF-8 with BOM', value: 'utf8bom' },
-          { name: 'ASCII', value: 'ascii' }
+          { name: 'ASCII', value: 'ascii' },
         ],
-        default: 'utf8'
+        default: 'utf8',
       },
       {
         type: 'confirm',
         name: 'includeHeaders',
         message: 'Include column headers?',
-        default: true
-      }
+        default: true,
+      },
     ]);
 
     const spinner = createSpinner('Generating CSV file...').start();
 
     try {
       const loans = await this.loanService.getLoans();
-      const filePath = path.join(process.cwd(), 'data', 'exports', csvOptions.filename);
-      
+      const filePath = path.join(
+        process.cwd(),
+        'data',
+        'exports',
+        csvOptions.filename
+      );
+
       const fileSize = await this.exportService.exportToCsv(loans, filePath, {
         format: 'csv',
-        includeMetadata: csvOptions.includeHeaders
+        includeMetadata: csvOptions.includeHeaders,
       });
 
       spinner.success({ text: 'CSV file generated successfully!' });
 
-      console.log(boxen(
-        chalk.green('✅ CSV Export Complete!') + '\n\n' +
-        chalk.cyan('📁 File: ') + chalk.white(csvOptions.filename) + '\n' +
-        chalk.cyan('📍 Location: ') + chalk.white(filePath) + '\n' +
-        chalk.cyan('📊 Records: ') + chalk.white(loans.length.toString()) + '\n' +
-        chalk.cyan('📏 Size: ') + chalk.white(`${Math.round(fileSize / 1024)} KB`) + '\n' +
-        chalk.cyan('🔤 Encoding: ') + chalk.white(csvOptions.encoding),
-        {
-          padding: 1,
-          margin: 1,
-          borderStyle: 'round',
-          borderColor: 'green',
-          textAlignment: 'left'
-        }
-      ));
-
+      console.log(
+        boxen(
+          chalk.green('✅ CSV Export Complete!') +
+            '\n\n' +
+            chalk.cyan('📁 File: ') +
+            chalk.white(csvOptions.filename) +
+            '\n' +
+            chalk.cyan('📍 Location: ') +
+            chalk.white(filePath) +
+            '\n' +
+            chalk.cyan('📊 Records: ') +
+            chalk.white(loans.length.toString()) +
+            '\n' +
+            chalk.cyan('📏 Size: ') +
+            chalk.white(`${Math.round(fileSize / 1024)} KB`) +
+            '\n' +
+            chalk.cyan('🔤 Encoding: ') +
+            chalk.white(csvOptions.encoding),
+          {
+            padding: 1,
+            margin: 1,
+            borderStyle: 'round',
+            borderColor: 'green',
+            textAlignment: 'left',
+          }
+        )
+      );
     } catch (error) {
       spinner.error({ text: 'Failed to generate CSV file' });
       throw error;
@@ -402,7 +459,8 @@ export class ExportController {
         name: 'filename',
         message: 'Enter text filename:',
         default: `loan-report-${new Date().toISOString().split('T')[0]}.txt`,
-        validate: (input) => input.trim().length > 0 || 'Filename cannot be empty'
+        validate: input =>
+          input.trim().length > 0 || 'Filename cannot be empty',
       },
       {
         type: 'list',
@@ -412,8 +470,8 @@ export class ExportController {
           { name: '📋 Table Format', value: 'table' },
           { name: '📄 Report Format', value: 'report' },
           { name: '📝 List Format', value: 'list' },
-          { name: '🔤 Plain Text', value: 'plain' }
-        ]
+          { name: '🔤 Plain Text', value: 'plain' },
+        ],
       },
       {
         type: 'checkbox',
@@ -425,9 +483,9 @@ export class ExportController {
           { name: 'Detailed Loan List', value: 'details', checked: true },
           { name: 'Overdue Loans', value: 'overdue', checked: true },
           { name: 'Payment Statistics', value: 'stats', checked: false },
-          { name: 'Footer Information', value: 'footer', checked: true }
+          { name: 'Footer Information', value: 'footer', checked: true },
         ],
-        validate: (input) => input.length > 0 || 'Select at least one section'
+        validate: input => input.length > 0 || 'Select at least one section',
       },
       {
         type: 'list',
@@ -436,41 +494,57 @@ export class ExportController {
         choices: [
           { name: 'Unix/Linux (LF)', value: 'lf' },
           { name: 'Windows (CRLF)', value: 'crlf' },
-          { name: 'Mac Classic (CR)', value: 'cr' }
+          { name: 'Mac Classic (CR)', value: 'cr' },
         ],
-        default: 'lf'
-      }
+        default: 'lf',
+      },
     ]);
 
     const spinner = createSpinner('Generating text report...').start();
 
     try {
       const loans = await this.loanService.getLoans();
-      const filePath = path.join(process.cwd(), 'data', 'exports', textOptions.filename);
-      
+      const filePath = path.join(
+        process.cwd(),
+        'data',
+        'exports',
+        textOptions.filename
+      );
+
       const fileSize = await this.exportService.exportToText(loans, filePath, {
         format: 'txt',
-        includeMetadata: true
+        includeMetadata: true,
       });
 
       spinner.success({ text: 'Text report generated successfully!' });
 
-      console.log(boxen(
-        chalk.green('✅ Text Export Complete!') + '\n\n' +
-        chalk.cyan('📁 File: ') + chalk.white(textOptions.filename) + '\n' +
-        chalk.cyan('📍 Location: ') + chalk.white(filePath) + '\n' +
-        chalk.cyan('📊 Records: ') + chalk.white(loans.length.toString()) + '\n' +
-        chalk.cyan('📏 Size: ') + chalk.white(`${Math.round(fileSize / 1024)} KB`) + '\n' +
-        chalk.cyan('📝 Format: ') + chalk.white(textOptions.format),
-        {
-          padding: 1,
-          margin: 1,
-          borderStyle: 'round',
-          borderColor: 'green',
-          textAlignment: 'left'
-        }
-      ));
-
+      console.log(
+        boxen(
+          chalk.green('✅ Text Export Complete!') +
+            '\n\n' +
+            chalk.cyan('📁 File: ') +
+            chalk.white(textOptions.filename) +
+            '\n' +
+            chalk.cyan('📍 Location: ') +
+            chalk.white(filePath) +
+            '\n' +
+            chalk.cyan('📊 Records: ') +
+            chalk.white(loans.length.toString()) +
+            '\n' +
+            chalk.cyan('📏 Size: ') +
+            chalk.white(`${Math.round(fileSize / 1024)} KB`) +
+            '\n' +
+            chalk.cyan('📝 Format: ') +
+            chalk.white(textOptions.format),
+          {
+            padding: 1,
+            margin: 1,
+            borderStyle: 'round',
+            borderColor: 'green',
+            textAlignment: 'left',
+          }
+        )
+      );
     } catch (error) {
       spinner.error({ text: 'Failed to generate text file' });
       throw error;
@@ -486,7 +560,8 @@ export class ExportController {
         name: 'filename',
         message: 'Enter JSON filename:',
         default: `loan-data-${new Date().toISOString().split('T')[0]}.json`,
-        validate: (input) => input.trim().length > 0 || 'Filename cannot be empty'
+        validate: input =>
+          input.trim().length > 0 || 'Filename cannot be empty',
       },
       {
         type: 'list',
@@ -496,15 +571,15 @@ export class ExportController {
           { name: '📊 Structured (with metadata)', value: 'structured' },
           { name: '📋 Simple array', value: 'simple' },
           { name: '🎯 Compact (minified)', value: 'compact' },
-          { name: '📈 With analytics', value: 'analytics' }
-        ]
+          { name: '📈 With analytics', value: 'analytics' },
+        ],
       },
       {
         type: 'confirm',
         name: 'prettyPrint',
         message: 'Format JSON for readability?',
         default: true,
-        when: (answers) => answers.structure !== 'compact'
+        when: answers => answers.structure !== 'compact',
       },
       {
         type: 'checkbox',
@@ -514,40 +589,56 @@ export class ExportController {
           { name: 'Calculated totals', value: 'totals', checked: true },
           { name: 'Status indicators', value: 'status', checked: true },
           { name: 'Export metadata', value: 'metadata', checked: true },
-          { name: 'Validation info', value: 'validation', checked: false }
-        ]
-      }
+          { name: 'Validation info', value: 'validation', checked: false },
+        ],
+      },
     ]);
 
     const spinner = createSpinner('Generating JSON file...').start();
 
     try {
       const loans = await this.loanService.getLoans();
-      const filePath = path.join(process.cwd(), 'data', 'exports', jsonOptions.filename);
-      
+      const filePath = path.join(
+        process.cwd(),
+        'data',
+        'exports',
+        jsonOptions.filename
+      );
+
       const fileSize = await this.exportService.exportToJson(loans, filePath, {
         format: 'json',
-        includeMetadata: jsonOptions.prettyPrint
+        includeMetadata: jsonOptions.prettyPrint,
       });
 
       spinner.success({ text: 'JSON file generated successfully!' });
 
-      console.log(boxen(
-        chalk.green('✅ JSON Export Complete!') + '\n\n' +
-        chalk.cyan('📁 File: ') + chalk.white(jsonOptions.filename) + '\n' +
-        chalk.cyan('📍 Location: ') + chalk.white(filePath) + '\n' +
-        chalk.cyan('📊 Records: ') + chalk.white(loans.length.toString()) + '\n' +
-        chalk.cyan('📏 Size: ') + chalk.white(`${Math.round(fileSize / 1024)} KB`) + '\n' +
-        chalk.cyan('🎯 Structure: ') + chalk.white(jsonOptions.structure),
-        {
-          padding: 1,
-          margin: 1,
-          borderStyle: 'round',
-          borderColor: 'green',
-          textAlignment: 'left'
-        }
-      ));
-
+      console.log(
+        boxen(
+          chalk.green('✅ JSON Export Complete!') +
+            '\n\n' +
+            chalk.cyan('📁 File: ') +
+            chalk.white(jsonOptions.filename) +
+            '\n' +
+            chalk.cyan('📍 Location: ') +
+            chalk.white(filePath) +
+            '\n' +
+            chalk.cyan('📊 Records: ') +
+            chalk.white(loans.length.toString()) +
+            '\n' +
+            chalk.cyan('📏 Size: ') +
+            chalk.white(`${Math.round(fileSize / 1024)} KB`) +
+            '\n' +
+            chalk.cyan('🎯 Structure: ') +
+            chalk.white(jsonOptions.structure),
+          {
+            padding: 1,
+            margin: 1,
+            borderStyle: 'round',
+            borderColor: 'green',
+            textAlignment: 'left',
+          }
+        )
+      );
     } catch (error) {
       spinner.error({ text: 'Failed to generate JSON file' });
       throw error;
@@ -557,35 +648,45 @@ export class ExportController {
   private async exportAnalyticsReport(): Promise<void> {
     console.log('\n' + chalk.bold('📈 Analytics Report Export'));
 
-    console.log(boxen(
-      chalk.yellow('⚠️ Analytics Report Not Available') + '\n\n' +
-      chalk.white('Advanced analytics reporting is not yet implemented.\n') +
-      chalk.white('Please use the basic export formats (PDF, CSV, JSON) for now.'),
-      {
-        padding: 1,
-        margin: 1,
-        borderStyle: 'round',
-        borderColor: 'yellow',
-        textAlignment: 'center'
-      }
-    ));
+    console.log(
+      boxen(
+        chalk.yellow('⚠️ Analytics Report Not Available') +
+          '\n\n' +
+          chalk.white(
+            'Advanced analytics reporting is not yet implemented.\n'
+          ) +
+          chalk.white(
+            'Please use the basic export formats (PDF, CSV, JSON) for now.'
+          ),
+        {
+          padding: 1,
+          margin: 1,
+          borderStyle: 'round',
+          borderColor: 'yellow',
+          textAlignment: 'center',
+        }
+      )
+    );
   }
 
   private async emailReport(): Promise<void> {
     console.log('\n' + chalk.bold('📧 Email Report'));
 
-    console.log(boxen(
-      chalk.yellow('⚠️ Email Feature Not Available') + '\n\n' +
-      chalk.white('Email functionality is not yet implemented.\n') +
-      chalk.white('Please export your data and send it manually.'),
-      {
-        padding: 1,
-        margin: 1,
-        borderStyle: 'round',
-        borderColor: 'yellow',
-        textAlignment: 'center'
-      }
-    ));
+    console.log(
+      boxen(
+        chalk.yellow('⚠️ Email Feature Not Available') +
+          '\n\n' +
+          chalk.white('Email functionality is not yet implemented.\n') +
+          chalk.white('Please export your data and send it manually.'),
+        {
+          padding: 1,
+          margin: 1,
+          borderStyle: 'round',
+          borderColor: 'yellow',
+          textAlignment: 'center',
+        }
+      )
+    );
   }
 
   private async customExport(): Promise<void> {
@@ -597,7 +698,8 @@ export class ExportController {
         name: 'filename',
         message: 'Enter custom filename:',
         default: `custom-export-${new Date().toISOString().split('T')[0]}`,
-        validate: (input) => input.trim().length > 0 || 'Filename cannot be empty'
+        validate: input =>
+          input.trim().length > 0 || 'Filename cannot be empty',
       },
       {
         type: 'list',
@@ -606,8 +708,8 @@ export class ExportController {
         choices: [
           { name: 'JSON', value: 'json' },
           { name: 'CSV', value: 'csv' },
-          { name: 'Text', value: 'txt' }
-        ]
+          { name: 'Text', value: 'txt' },
+        ],
       },
       {
         type: 'checkbox',
@@ -619,8 +721,8 @@ export class ExportController {
           { name: 'Overdue loans only', value: 'overdue' },
           { name: 'Loans with interest', value: 'withInterest' },
           { name: 'Loans without interest', value: 'withoutInterest' },
-          { name: 'Recent loans (last 30 days)', value: 'recent' }
-        ]
+          { name: 'Recent loans (last 30 days)', value: 'recent' },
+        ],
       },
       {
         type: 'checkbox',
@@ -637,9 +739,9 @@ export class ExportController {
           { name: 'Status', value: 'status', checked: true },
           { name: 'Days Overdue', value: 'daysOverdue', checked: false },
           { name: 'Created Date', value: 'createdDate', checked: false },
-          { name: 'Last Modified', value: 'lastModified', checked: false }
+          { name: 'Last Modified', value: 'lastModified', checked: false },
         ],
-        validate: (input) => input.length > 0 || 'Select at least one field'
+        validate: input => input.length > 0 || 'Select at least one field',
       },
       {
         type: 'list',
@@ -651,15 +753,15 @@ export class ExportController {
           { name: 'Amount (Low to High)', value: 'amountAsc' },
           { name: 'Repayment Date', value: 'repaymentDate' },
           { name: 'Status', value: 'status' },
-          { name: 'Created Date', value: 'createdDate' }
-        ]
+          { name: 'Created Date', value: 'createdDate' },
+        ],
       },
       {
         type: 'confirm',
         name: 'includeMetadata',
         message: 'Include export metadata?',
-        default: true
-      }
+        default: true,
+      },
     ]);
 
     const spinner = createSpinner('Generating custom export...').start();
@@ -679,61 +781,90 @@ export class ExportController {
         filteredLoans = filteredLoans.filter(loan => loan.isOverdue());
       }
       if (customOptions.filters.includes('withInterest')) {
-        filteredLoans = filteredLoans.filter(loan => loan.interestRate && loan.interestRate > 0);
+        filteredLoans = filteredLoans.filter(
+          loan => loan.interestRate && loan.interestRate > 0
+        );
       }
       if (customOptions.filters.includes('withoutInterest')) {
-        filteredLoans = filteredLoans.filter(loan => !loan.interestRate || loan.interestRate === 0);
+        filteredLoans = filteredLoans.filter(
+          loan => !loan.interestRate || loan.interestRate === 0
+        );
       }
       if (customOptions.filters.includes('recent')) {
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        filteredLoans = filteredLoans.filter(loan => new Date(loan.repaymentDate) >= thirtyDaysAgo);
+        filteredLoans = filteredLoans.filter(
+          loan => new Date(loan.repaymentDate) >= thirtyDaysAgo
+        );
       }
 
       const filename = `${customOptions.filename}.${customOptions.format}`;
       const filePath = path.join(process.cwd(), 'data', 'exports', filename);
-      
+
       let fileSize = 0;
-      
+
       switch (customOptions.format) {
         case 'json':
-          fileSize = await this.exportService.exportToJson(filteredLoans, filePath, {
-            format: 'json',
-            includeMetadata: customOptions.includeMetadata
-          });
+          fileSize = await this.exportService.exportToJson(
+            filteredLoans,
+            filePath,
+            {
+              format: 'json',
+              includeMetadata: customOptions.includeMetadata,
+            }
+          );
           break;
         case 'csv':
-          fileSize = await this.exportService.exportToCsv(filteredLoans, filePath, {
-            format: 'csv',
-            includeMetadata: customOptions.includeMetadata
-          });
+          fileSize = await this.exportService.exportToCsv(
+            filteredLoans,
+            filePath,
+            {
+              format: 'csv',
+              includeMetadata: customOptions.includeMetadata,
+            }
+          );
           break;
         case 'txt':
-          fileSize = await this.exportService.exportToText(filteredLoans, filePath, {
-            format: 'txt',
-            includeMetadata: customOptions.includeMetadata
-          });
+          fileSize = await this.exportService.exportToText(
+            filteredLoans,
+            filePath,
+            {
+              format: 'txt',
+              includeMetadata: customOptions.includeMetadata,
+            }
+          );
           break;
       }
 
       spinner.success({ text: 'Custom export generated successfully!' });
 
-      console.log(boxen(
-        chalk.green('✅ Custom Export Complete!') + '\n\n' +
-        chalk.cyan('📁 File: ') + chalk.white(filename) + '\n' +
-        chalk.cyan('📍 Location: ') + chalk.white(filePath) + '\n' +
-        chalk.cyan('📊 Records: ') + chalk.white(filteredLoans.length.toString()) + '\n' +
-        chalk.cyan('🎯 Filters Applied: ') + chalk.white(customOptions.filters.join(', ') || 'None') + '\n' +
-        chalk.cyan('📏 Size: ') + chalk.white(`${Math.round(fileSize / 1024)} KB`),
-        {
-          padding: 1,
-          margin: 1,
-          borderStyle: 'round',
-          borderColor: 'green',
-          textAlignment: 'left'
-        }
-      ));
-
+      console.log(
+        boxen(
+          chalk.green('✅ Custom Export Complete!') +
+            '\n\n' +
+            chalk.cyan('📁 File: ') +
+            chalk.white(filename) +
+            '\n' +
+            chalk.cyan('📍 Location: ') +
+            chalk.white(filePath) +
+            '\n' +
+            chalk.cyan('📊 Records: ') +
+            chalk.white(filteredLoans.length.toString()) +
+            '\n' +
+            chalk.cyan('🎯 Filters Applied: ') +
+            chalk.white(customOptions.filters.join(', ') || 'None') +
+            '\n' +
+            chalk.cyan('📏 Size: ') +
+            chalk.white(`${Math.round(fileSize / 1024)} KB`),
+          {
+            padding: 1,
+            margin: 1,
+            borderStyle: 'round',
+            borderColor: 'green',
+            textAlignment: 'left',
+          }
+        )
+      );
     } catch (error) {
       spinner.error({ text: 'Failed to generate custom export' });
       throw error;

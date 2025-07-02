@@ -32,16 +32,27 @@ export class ValidationService {
 
   // ==================== LOAN VALIDATION ====================
 
-  validateLoan(loanData: Partial<Loan>, options: LoanValidationOptions = {}): ValidationResult {
+  validateLoan(
+    loanData: Partial<Loan>,
+    options: LoanValidationOptions = {}
+  ): ValidationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
 
     try {
       // Required field validation
-      const requiredFields = options.requiredFields || ['lenderName', 'phoneNumber', 'amount', 'repaymentDate'];
-      
+      const requiredFields = options.requiredFields || [
+        'lenderName',
+        'phoneNumber',
+        'amount',
+        'repaymentDate',
+      ];
+
       for (const field of requiredFields) {
-        if (!loanData[field as keyof Loan] || loanData[field as keyof Loan] === '') {
+        if (
+          !loanData[field as keyof Loan] ||
+          loanData[field as keyof Loan] === ''
+        ) {
           errors.push(`${this.formatFieldName(field)} is required`);
         }
       }
@@ -75,7 +86,10 @@ export class ValidationService {
 
       // Date validation
       if (loanData.repaymentDate) {
-        const dateValidation = this.validateRepaymentDate(loanData.repaymentDate, options);
+        const dateValidation = this.validateRepaymentDate(
+          loanData.repaymentDate,
+          options
+        );
         if (!dateValidation.isValid) {
           errors.push(...dateValidation.errors);
         }
@@ -84,7 +98,9 @@ export class ValidationService {
 
       // Interest rate validation
       if (loanData.interestRate !== undefined) {
-        const interestValidation = this.validateInterestRate(loanData.interestRate);
+        const interestValidation = this.validateInterestRate(
+          loanData.interestRate
+        );
         if (!interestValidation.isValid) {
           errors.push(...interestValidation.errors);
         }
@@ -99,15 +115,14 @@ export class ValidationService {
       return {
         isValid: errors.length === 0,
         errors,
-        warnings
+        warnings,
       };
-
     } catch (error) {
       this.logger.error('Validation error', error as Error);
       return {
         isValid: false,
         errors: ['An error occurred during validation'],
-        warnings: []
+        warnings: [],
       };
     }
   }
@@ -135,7 +150,9 @@ export class ValidationService {
 
     // Character validation
     if (!/^[a-zA-Z\s'-]+$/.test(trimmedName)) {
-      errors.push('Lender name can only contain letters, spaces, hyphens, and apostrophes');
+      errors.push(
+        'Lender name can only contain letters, spaces, hyphens, and apostrophes'
+      );
     }
 
     // Pattern validation
@@ -152,14 +169,17 @@ export class ValidationService {
       errors.push('Lender name cannot be only numbers');
     }
 
-    if (trimmedName.toLowerCase() === 'unknown' || trimmedName.toLowerCase() === 'n/a') {
+    if (
+      trimmedName.toLowerCase() === 'unknown' ||
+      trimmedName.toLowerCase() === 'n/a'
+    ) {
       warnings.push('Consider using a more specific lender name');
     }
 
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
@@ -192,11 +212,15 @@ export class ValidationService {
     if (cleanPhone.startsWith('234') || cleanPhone.startsWith('+234')) {
       const nigerianNumber = cleanPhone.replace(/^\+?234/, '');
       if (nigerianNumber.length !== 10) {
-        warnings.push('Nigerian phone number should have 10 digits after country code');
+        warnings.push(
+          'Nigerian phone number should have 10 digits after country code'
+        );
       }
-      
+
       if (!nigerianNumber.match(/^[789]/)) {
-        warnings.push('Nigerian mobile numbers typically start with 7, 8, or 9');
+        warnings.push(
+          'Nigerian mobile numbers typically start with 7, 8, or 9'
+        );
       }
     }
 
@@ -221,11 +245,14 @@ export class ValidationService {
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
-  validateAmount(amount: number, options: LoanValidationOptions = {}): ValidationResult {
+  validateAmount(
+    amount: number,
+    options: LoanValidationOptions = {}
+  ): ValidationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
 
@@ -274,11 +301,14 @@ export class ValidationService {
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
-  validateRepaymentDate(dateString: string, options: LoanValidationOptions = {}): ValidationResult {
+  validateRepaymentDate(
+    dateString: string,
+    options: LoanValidationOptions = {}
+  ): ValidationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
 
@@ -289,7 +319,7 @@ export class ValidationService {
 
     // Parse date
     const date = new Date(dateString);
-    
+
     if (isNaN(date.getTime())) {
       errors.push('Repayment date is not a valid date');
       return { isValid: false, errors, warnings };
@@ -297,7 +327,11 @@ export class ValidationService {
 
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const repaymentDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+    const repaymentDate = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate()
+    );
 
     // Future date validation
     if (options.allowFutureDates !== false) {
@@ -334,7 +368,7 @@ export class ValidationService {
     // Holiday warnings (basic check for common dates)
     const month = repaymentDate.getMonth() + 1;
     const day = repaymentDate.getDate();
-    
+
     if ((month === 12 && day === 25) || (month === 1 && day === 1)) {
       warnings.push('Repayment date falls on a major holiday');
     }
@@ -342,7 +376,7 @@ export class ValidationService {
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
@@ -386,21 +420,26 @@ export class ValidationService {
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
   // ==================== BUSINESS RULES VALIDATION ====================
 
-  validateBusinessRules(loanData: Partial<Loan>, options: LoanValidationOptions = {}): ValidationResult {
+  validateBusinessRules(
+    loanData: Partial<Loan>,
+    options: LoanValidationOptions = {}
+  ): ValidationResult {
     const errors: string[] = [];
     const warnings: string[] = [];
 
     // Amount vs Interest relationship
     if (loanData.amount && loanData.interestRate) {
-      const totalWithInterest = loanData.amount + (loanData.amount * loanData.interestRate / 100);
-      
-      if (totalWithInterest > 50000000) { // 50 million
+      const totalWithInterest =
+        loanData.amount + (loanData.amount * loanData.interestRate) / 100;
+
+      if (totalWithInterest > 50000000) {
+        // 50 million
         warnings.push('Total amount with interest is very large');
       }
     }
@@ -409,7 +448,9 @@ export class ValidationService {
     if (loanData.amount && loanData.repaymentDate) {
       const repaymentDate = new Date(loanData.repaymentDate);
       const now = new Date();
-      const daysUntilRepayment = Math.ceil((repaymentDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+      const daysUntilRepayment = Math.ceil(
+        (repaymentDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+      );
 
       if (loanData.amount > 100000 && daysUntilRepayment < 7) {
         warnings.push('Large loan amount with very short repayment period');
@@ -423,7 +464,9 @@ export class ValidationService {
     // Strict mode validations
     if (options.strictMode) {
       if (loanData.lenderName && loanData.lenderName.length < 3) {
-        errors.push('In strict mode, lender name must be at least 3 characters');
+        errors.push(
+          'In strict mode, lender name must be at least 3 characters'
+        );
       }
 
       if (loanData.amount && loanData.amount < 500) {
@@ -434,20 +477,25 @@ export class ValidationService {
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
   // ==================== BATCH VALIDATION ====================
 
-  validateLoanBatch(loans: Partial<Loan>[], options: LoanValidationOptions = {}): ValidationResult[] {
+  validateLoanBatch(
+    loans: Partial<Loan>[],
+    options: LoanValidationOptions = {}
+  ): ValidationResult[] {
     return loans.map((loan, index) => {
       const result = this.validateLoan(loan, options);
-      
+
       // Add index information to errors
       result.errors = result.errors.map(error => `Loan ${index + 1}: ${error}`);
-      result.warnings = result.warnings.map(warning => `Loan ${index + 1}: ${warning}`);
-      
+      result.warnings = result.warnings.map(
+        warning => `Loan ${index + 1}: ${warning}`
+      );
+
       return result;
     });
   }
@@ -458,27 +506,35 @@ export class ValidationService {
 
     // Check for duplicate phone numbers
     const phoneNumbers = loans.map(loan => loan.phoneNumber).filter(Boolean);
-    const duplicatePhones = phoneNumbers.filter((phone, index) => phoneNumbers.indexOf(phone) !== index);
-    
+    const duplicatePhones = phoneNumbers.filter(
+      (phone, index) => phoneNumbers.indexOf(phone) !== index
+    );
+
     if (duplicatePhones.length > 0) {
-      warnings.push(`Duplicate phone numbers found: ${[...new Set(duplicatePhones)].join(', ')}`);
+      warnings.push(
+        `Duplicate phone numbers found: ${[...new Set(duplicatePhones)].join(', ')}`
+      );
     }
 
     // Check for duplicate lender names with same phone
     const lenderPhonePairs = loans
       .filter(loan => loan.lenderName && loan.phoneNumber)
       .map(loan => `${loan.lenderName}|${loan.phoneNumber}`);
-    
-    const duplicatePairs = lenderPhonePairs.filter((pair, index) => lenderPhonePairs.indexOf(pair) !== index);
-    
+
+    const duplicatePairs = lenderPhonePairs.filter(
+      (pair, index) => lenderPhonePairs.indexOf(pair) !== index
+    );
+
     if (duplicatePairs.length > 0) {
-      warnings.push('Potential duplicate loans detected (same lender and phone number)');
+      warnings.push(
+        'Potential duplicate loans detected (same lender and phone number)'
+      );
     }
 
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings,
     };
   }
 
@@ -522,11 +578,21 @@ export class ValidationService {
     return sanitized;
   }
 
-  getValidationSummary(results: ValidationResult[]): { totalErrors: number; totalWarnings: number; validCount: number } {
+  getValidationSummary(results: ValidationResult[]): {
+    totalErrors: number;
+    totalWarnings: number;
+    validCount: number;
+  } {
     return {
-      totalErrors: results.reduce((sum, result) => sum + result.errors.length, 0),
-      totalWarnings: results.reduce((sum, result) => sum + result.warnings.length, 0),
-      validCount: results.filter(result => result.isValid).length
+      totalErrors: results.reduce(
+        (sum, result) => sum + result.errors.length,
+        0
+      ),
+      totalWarnings: results.reduce(
+        (sum, result) => sum + result.warnings.length,
+        0
+      ),
+      validCount: results.filter(result => result.isValid).length,
     };
   }
 
@@ -535,23 +601,23 @@ export class ValidationService {
       {
         field: 'lenderName',
         message: 'Lender name is required',
-        validator: (value) => !!value && value.trim().length > 0
+        validator: value => !!value && value.trim().length > 0,
       },
       {
         field: 'phoneNumber',
         message: 'Phone number is required',
-        validator: (value) => !!value && value.trim().length > 0
+        validator: value => !!value && value.trim().length > 0,
       },
       {
         field: 'amount',
         message: 'Amount must be greater than zero',
-        validator: (value) => typeof value === 'number' && value > 0
+        validator: value => typeof value === 'number' && value > 0,
       },
       {
         field: 'repaymentDate',
         message: 'Repayment date is required',
-        validator: (value) => !!value && !isNaN(new Date(value).getTime())
-      }
+        validator: value => !!value && !isNaN(new Date(value).getTime()),
+      },
     ];
   }
 

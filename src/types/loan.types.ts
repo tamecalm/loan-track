@@ -76,9 +76,20 @@ export interface LoanFilterOptions {
   showOverdue?: boolean;
   showPending?: boolean;
   showUpcoming?: boolean;
-  dateFilter?: 'all' | 'today' | 'week' | 'month' | 'quarter' | 'year' | 'custom';
+  dateFilter?:
+    | 'all'
+    | 'today'
+    | 'week'
+    | 'month'
+    | 'quarter'
+    | 'year'
+    | 'custom';
   amountFilter?: 'all' | 'small' | 'medium' | 'large' | 'custom';
-  interestFilter?: 'all' | 'with-interest' | 'without-interest' | 'high-interest';
+  interestFilter?:
+    | 'all'
+    | 'with-interest'
+    | 'without-interest'
+    | 'high-interest';
   riskFilter?: 'all' | 'low' | 'medium' | 'high';
   categoryFilter?: LoanCategory[];
   priorityFilter?: LoanPriority[];
@@ -366,14 +377,14 @@ export enum LoanStatus {
   OVERDUE = 'overdue',
   PARTIALLY_PAID = 'partially_paid',
   CANCELLED = 'cancelled',
-  RESCHEDULED = 'rescheduled'
+  RESCHEDULED = 'rescheduled',
 }
 
 export enum RiskLevel {
   LOW = 'low',
   MEDIUM = 'medium',
   HIGH = 'high',
-  CRITICAL = 'critical'
+  CRITICAL = 'critical',
 }
 
 export enum LoanCategory {
@@ -384,14 +395,14 @@ export enum LoanCategory {
   EDUCATION = 'education',
   MEDICAL = 'medical',
   FAMILY = 'family',
-  OTHER = 'other'
+  OTHER = 'other',
 }
 
 export enum LoanPriority {
   LOW = 'low',
   MEDIUM = 'medium',
   HIGH = 'high',
-  URGENT = 'urgent'
+  URGENT = 'urgent',
 }
 
 export enum PaymentMethod {
@@ -401,14 +412,14 @@ export enum PaymentMethod {
   CHECK = 'check',
   CARD = 'card',
   CRYPTO = 'crypto',
-  OTHER = 'other'
+  OTHER = 'other',
 }
 
 export enum ReminderType {
   DUE_SOON = 'due_soon',
   OVERDUE = 'overdue',
   PAYMENT_RECEIVED = 'payment_received',
-  CUSTOM = 'custom'
+  CUSTOM = 'custom',
 }
 
 export enum BatchStatus {
@@ -416,7 +427,7 @@ export enum BatchStatus {
   PROCESSING = 'processing',
   COMPLETED = 'completed',
   FAILED = 'failed',
-  CANCELLED = 'cancelled'
+  CANCELLED = 'cancelled',
 }
 
 export enum ExportFormat {
@@ -425,14 +436,14 @@ export enum ExportFormat {
   PDF = 'pdf',
   EXCEL = 'excel',
   TXT = 'txt',
-  HTML = 'html'
+  HTML = 'html',
 }
 
 export enum ImportFormat {
   CSV = 'csv',
   JSON = 'json',
   EXCEL = 'excel',
-  TXT = 'txt'
+  TXT = 'txt',
 }
 
 export enum LoanField {
@@ -452,7 +463,7 @@ export enum LoanField {
   CREATED_AT = 'createdAt',
   UPDATED_AT = 'updatedAt',
   DAYS_UNTIL_DUE = 'daysUntilDue',
-  DAYS_OVERDUE = 'daysOverdue'
+  DAYS_OVERDUE = 'daysOverdue',
 }
 
 export enum LoanSortField {
@@ -466,7 +477,7 @@ export enum LoanSortField {
   RISK_LEVEL = 'riskLevel',
   PRIORITY = 'priority',
   DAYS_UNTIL_DUE = 'daysUntilDue',
-  DAYS_OVERDUE = 'daysOverdue'
+  DAYS_OVERDUE = 'daysOverdue',
 }
 
 export enum LoanGroupBy {
@@ -477,14 +488,14 @@ export enum LoanGroupBy {
   LENDER = 'lender',
   MONTH = 'month',
   QUARTER = 'quarter',
-  YEAR = 'year'
+  YEAR = 'year',
 }
 
 export enum BackupType {
   FULL = 'full',
   INCREMENTAL = 'incremental',
   LOANS_ONLY = 'loans_only',
-  METADATA_ONLY = 'metadata_only'
+  METADATA_ONLY = 'metadata_only',
 }
 
 export enum AuditAction {
@@ -496,7 +507,7 @@ export enum AuditAction {
   CANCEL = 'cancel',
   RESTORE = 'restore',
   EXPORT = 'export',
-  IMPORT = 'import'
+  IMPORT = 'import',
 }
 
 export enum NotificationType {
@@ -506,14 +517,14 @@ export enum NotificationType {
   SYSTEM_ALERT = 'system_alert',
   REMINDER = 'reminder',
   WARNING = 'warning',
-  INFO = 'info'
+  INFO = 'info',
 }
 
 export enum NotificationPriority {
   LOW = 'low',
   MEDIUM = 'medium',
   HIGH = 'high',
-  CRITICAL = 'critical'
+  CRITICAL = 'critical',
 }
 
 // ==================== TYPE GUARDS ====================
@@ -553,29 +564,51 @@ export type LoanCategoryCount = Record<LoanCategory, number>;
 export type LoanPriorityCount = Record<LoanPriority, number>;
 export type RiskLevelCount = Record<RiskLevel, number>;
 
-export type LoanFieldValue<T extends LoanField> = 
-  T extends LoanField.ID ? string :
-  T extends LoanField.LENDER_NAME ? string :
-  T extends LoanField.PHONE_NUMBER ? string :
-  T extends LoanField.AMOUNT ? number :
-  T extends LoanField.INTEREST_RATE ? number | undefined :
-  T extends LoanField.TOTAL_WITH_INTEREST ? number :
-  T extends LoanField.REPAYMENT_DATE ? string :
-  T extends LoanField.STATUS ? LoanStatus :
-  T extends LoanField.RISK_LEVEL ? RiskLevel :
-  T extends LoanField.CATEGORY ? LoanCategory | undefined :
-  T extends LoanField.PRIORITY ? LoanPriority :
-  T extends LoanField.TAGS ? string[] :
-  T extends LoanField.NOTES ? string | undefined :
-  T extends LoanField.CREATED_AT ? string :
-  T extends LoanField.UPDATED_AT ? string :
-  T extends LoanField.DAYS_UNTIL_DUE ? number :
-  T extends LoanField.DAYS_OVERDUE ? number :
-  unknown;
+export type LoanFieldValue<T extends LoanField> = T extends LoanField.ID
+  ? string
+  : T extends LoanField.LENDER_NAME
+    ? string
+    : T extends LoanField.PHONE_NUMBER
+      ? string
+      : T extends LoanField.AMOUNT
+        ? number
+        : T extends LoanField.INTEREST_RATE
+          ? number | undefined
+          : T extends LoanField.TOTAL_WITH_INTEREST
+            ? number
+            : T extends LoanField.REPAYMENT_DATE
+              ? string
+              : T extends LoanField.STATUS
+                ? LoanStatus
+                : T extends LoanField.RISK_LEVEL
+                  ? RiskLevel
+                  : T extends LoanField.CATEGORY
+                    ? LoanCategory | undefined
+                    : T extends LoanField.PRIORITY
+                      ? LoanPriority
+                      : T extends LoanField.TAGS
+                        ? string[]
+                        : T extends LoanField.NOTES
+                          ? string | undefined
+                          : T extends LoanField.CREATED_AT
+                            ? string
+                            : T extends LoanField.UPDATED_AT
+                              ? string
+                              : T extends LoanField.DAYS_UNTIL_DUE
+                                ? number
+                                : T extends LoanField.DAYS_OVERDUE
+                                  ? number
+                                  : unknown;
 
 export type PartialLoan = Partial<LoanBase>;
-export type RequiredLoanFields = Pick<LoanBase, 'lenderName' | 'phoneNumber' | 'amount' | 'repaymentDate'>;
-export type OptionalLoanFields = Omit<LoanBase, keyof RequiredLoanFields | 'id' | 'isPaid' | 'createdAt' | 'updatedAt'>;
+export type RequiredLoanFields = Pick<
+  LoanBase,
+  'lenderName' | 'phoneNumber' | 'amount' | 'repaymentDate'
+>;
+export type OptionalLoanFields = Omit<
+  LoanBase,
+  keyof RequiredLoanFields | 'id' | 'isPaid' | 'createdAt' | 'updatedAt'
+>;
 
 export type LoanWithCalculatedFields = LoanBase & {
   totalWithInterest: number;
@@ -615,7 +648,12 @@ export interface LoanRelationship {
   id: string;
   primaryLoanId: string;
   relatedLoanId: string;
-  relationshipType: 'refinance' | 'consolidation' | 'split' | 'renewal' | 'related';
+  relationshipType:
+    | 'refinance'
+    | 'consolidation'
+    | 'split'
+    | 'renewal'
+    | 'related';
   description?: string;
   createdAt: string;
 }
@@ -635,7 +673,13 @@ export interface LoanDocument {
 export interface LoanCollateral {
   id: string;
   loanId: string;
-  type: 'property' | 'vehicle' | 'jewelry' | 'electronics' | 'documents' | 'other';
+  type:
+    | 'property'
+    | 'vehicle'
+    | 'jewelry'
+    | 'electronics'
+    | 'documents'
+    | 'other';
   description: string;
   estimatedValue: number;
   condition: 'excellent' | 'good' | 'fair' | 'poor';
@@ -690,7 +734,12 @@ export interface LoanWorkflowStep {
   stepNumber: number;
   name: string;
   description?: string;
-  action: 'create_loan' | 'send_reminder' | 'mark_overdue' | 'generate_report' | 'custom';
+  action:
+    | 'create_loan'
+    | 'send_reminder'
+    | 'mark_overdue'
+    | 'generate_report'
+    | 'custom';
   conditions: LoanWorkflowCondition[];
   parameters: Record<string, any>;
   isRequired: boolean;
@@ -698,7 +747,13 @@ export interface LoanWorkflowStep {
 
 export interface LoanWorkflowCondition {
   field: string;
-  operator: 'equals' | 'not_equals' | 'greater_than' | 'less_than' | 'contains' | 'not_contains';
+  operator:
+    | 'equals'
+    | 'not_equals'
+    | 'greater_than'
+    | 'less_than'
+    | 'contains'
+    | 'not_contains';
   value: any;
   logicalOperator?: 'and' | 'or';
 }
@@ -741,7 +796,14 @@ export interface LoanReportSchedule {
 export interface LoanIntegration {
   id: string;
   name: string;
-  type: 'bank' | 'payment_gateway' | 'sms' | 'email' | 'accounting' | 'crm' | 'other';
+  type:
+    | 'bank'
+    | 'payment_gateway'
+    | 'sms'
+    | 'email'
+    | 'accounting'
+    | 'crm'
+    | 'other';
   provider: string;
   configuration: Record<string, any>;
   isActive: boolean;
@@ -795,7 +857,7 @@ export enum LoanWebhookEvent {
   LOAN_PAID = 'loan.paid',
   LOAN_OVERDUE = 'loan.overdue',
   PAYMENT_RECEIVED = 'payment.received',
-  REMINDER_SENT = 'reminder.sent'
+  REMINDER_SENT = 'reminder.sent',
 }
 
 export interface LoanWebhookPayload {

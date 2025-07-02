@@ -15,9 +15,9 @@ export const APP_CONFIG = {
   author: {
     name: 'John Ilesanmi',
     instagram: '@numcalm',
-    github: '@tamecalm'
+    github: '@tamecalm',
   },
-  startDate: '27th July 2025'
+  startDate: '27th July 2025',
 };
 
 // Default settings
@@ -25,13 +25,13 @@ export const DEFAULT_SETTINGS = {
   currency: {
     code: 'NGN',
     symbol: '₦',
-    decimals: 0
+    decimals: 0,
   },
   dateFormat: 'YYYY-MM-DD',
   reminderDays: [7, 3, 1],
   autoBackup: true,
   backupRetentionDays: 30,
-  exportRetentionDays: 30
+  exportRetentionDays: 30,
 };
 
 // Validation rules
@@ -39,21 +39,21 @@ export const VALIDATION_RULES = {
   lenderName: {
     minLength: 2,
     maxLength: 50,
-    required: true
+    required: true,
   },
   phoneNumber: {
     minLength: 10,
     maxLength: 15,
-    required: true
+    required: true,
   },
   amount: {
     min: 100,
     max: 10000000,
-    required: true
+    required: true,
   },
   interestRate: {
     min: 0,
     max: 100,
-    required: false
-  }
+    required: false,
+  },
 };

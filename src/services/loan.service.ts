@@ -21,12 +21,15 @@ export class LoanService {
 
   async getLoans(): Promise<LoanModel[]> {
     const loans = await this.storage.readLoans();
-    return loans.map((loan) => new LoanModel(loan));
+    return loans.map(loan => new LoanModel(loan));
   }
 
-  async updateLoan(id: string, updates: Partial<Loan>): Promise<LoanModel | null> {
+  async updateLoan(
+    id: string,
+    updates: Partial<Loan>
+  ): Promise<LoanModel | null> {
     const loans = await this.storage.readLoans();
-    const loanIndex = loans.findIndex((loan) => loan.id === id);
+    const loanIndex = loans.findIndex(loan => loan.id === id);
     if (loanIndex === -1) return null;
     loans[loanIndex] = { ...loans[loanIndex], ...updates };
     await this.storage.saveLoans(loans);
@@ -35,7 +38,7 @@ export class LoanService {
 
   async deleteLoan(id: string): Promise<boolean> {
     const loans = await this.storage.readLoans();
-    const updatedLoans = loans.filter((loan) => loan.id !== id);
+    const updatedLoans = loans.filter(loan => loan.id !== id);
     if (updatedLoans.length === loans.length) return false;
     await this.storage.saveLoans(updatedLoans);
     return true;
@@ -46,6 +49,9 @@ export class LoanService {
   }
 
   getTotalDebt(loans: LoanModel[]): number {
-    return loans.reduce((total, loan) => total + loan.calculateTotalWithInterest(), 0);
+    return loans.reduce(
+      (total, loan) => total + loan.calculateTotalWithInterest(),
+      0
+    );
   }
 }

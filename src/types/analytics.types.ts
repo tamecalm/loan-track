@@ -360,7 +360,12 @@ export interface AnalyticsCache {
 }
 
 export interface AnalyticsEvent {
-  type: 'loan_added' | 'loan_paid' | 'loan_overdue' | 'loan_updated' | 'loan_deleted';
+  type:
+    | 'loan_added'
+    | 'loan_paid'
+    | 'loan_overdue'
+    | 'loan_updated'
+    | 'loan_deleted';
   timestamp: string;
   loanId: string;
   data: any;

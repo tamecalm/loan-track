@@ -21,10 +21,13 @@ export class StorageService {
 
   async exportLoans(): Promise<void> {
     const loans = await this.readLoans();
-    const exportPath = path.join(path.dirname(LOAN_DATA_PATH), 'loans_export.txt');
+    const exportPath = path.join(
+      path.dirname(LOAN_DATA_PATH),
+      'loans_export.txt'
+    );
     const exportData = loans
       .map(
-        (loan) =>
+        loan =>
           `Lender: ${loan.lenderName}, Phone: ${loan.phoneNumber}, Amount: ₦${loan.amount}, Due: ${loan.repaymentDate}, Interest: ${loan.interestRate ? `${loan.interestRate}%` : 'None'}, Paid: ${loan.isPaid ? 'Yes' : 'No'}`
       )
       .join('\n');

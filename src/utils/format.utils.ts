@@ -12,7 +12,7 @@ export function formatDate(date: string): string {
 export function formatLoanTable(loans: LoanModel[]): string {
   let table = 'ID | Lender | Phone | Amount | Due Date | Interest | Status\n';
   table += '-'.repeat(60) + '\n';
-  loans.forEach((loan) => {
+  loans.forEach(loan => {
     table += `${loan.id.slice(0, 8)} | ${loan.lenderName} | ${loan.phoneNumber} | ${formatCurrency(loan.calculateTotalWithInterest())} | ${formatDate(loan.repaymentDate)} | ${loan.interestRate ? `${loan.interestRate}%` : 'None'} | ${loan.isPaid ? 'Paid' : loan.isOverdue() ? 'Overdue' : 'Pending'}\n`;
   });
   return table;

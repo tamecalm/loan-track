@@ -108,10 +108,10 @@ export class BackupService {
   ): Promise<string> {
     try {
       await this.initialize();
-      
+
       const backupId = this.generateBackupId();
       const timestamp = new Date().toISOString();
-      
+
       // Gather data based on backup type
       const backupData: BackupData = {
         metadata: {
@@ -123,9 +123,9 @@ export class BackupService {
           version: '2.0.0',
           description,
           compressed: options.compress || false,
-          encrypted: options.encrypt || false
+          encrypted: options.encrypt || false,
         },
-        version: '2.0.0'
+        version: '2.0.0',
       };
 
       if (type === 'full' || type === 'loans-only') {
@@ -139,7 +139,7 @@ export class BackupService {
 
       // Convert to JSON
       let jsonData = JSON.stringify(backupData, null, 2);
-      
+
       // Apply compression if requested
       if (options.compress) {
         jsonData = await this.compressData(jsonData);
@@ -164,7 +164,6 @@ export class BackupService {
 
       this.logger.info(`Backup created successfully: ${backupId}`);
       return backupId;
-
     } catch (error) {
       this.logger.error('Failed to create backup', error as Error);
       throw error;
@@ -182,11 +181,14 @@ export class BackupService {
     try {
       // Create safety backup before restore
       if (options.createSafetyBackup !== false) {
-        await this.createBackup('full', `Safety backup before restore ${backupId}`);
+        await this.createBackup(
+          'full',
+          `Safety backup before restore ${backupId}`
+        );
       }
 
       const backupData = await this.loadBackup(backupId);
-      
+
       if (!backupData) {
         throw new Error(`Backup ${backupId} not found`);
       }
@@ -207,14 +209,20 @@ export class BackupService {
       // Restore settings if requested and available
       if (options.restoreSettings !== false && backupData.settings) {
         // Use importSettings() method instead of restoreSettings()
-        const tempBackupPath = path.join(this.backupDir, `temp_restore_${Date.now()}.json`);
-        await fs.writeFile(tempBackupPath, JSON.stringify(backupData.settings, null, 2));
-        
+        const tempBackupPath = path.join(
+          this.backupDir,
+          `temp_restore_${Date.now()}.json`
+        );
+        await fs.writeFile(
+          tempBackupPath,
+          JSON.stringify(backupData.settings, null, 2)
+        );
+
         try {
           await this.configManager.importSettings({
             filename: tempBackupPath,
             mode: 'replace',
-            createBackup: false
+            createBackup: false,
           });
           settingsRestored = true;
           this.logger.info('Settings restored successfully');
@@ -223,7 +231,10 @@ export class BackupService {
           try {
             await fs.unlink(tempBackupPath);
           } catch (error) {
-            this.logger.warn('Failed to clean up temp restore file', error as Error);
+            this.logger.warn(
+              'Failed to clean up temp restore file',
+              error as Error
+            );
           }
         }
       }
@@ -232,9 +243,8 @@ export class BackupService {
 
       return {
         loansRestored,
-        settingsRestored
+        settingsRestored,
       };
-
     } catch (error) {
       this.logger.error(`Failed to restore backup ${backupId}`, error as Error);
       throw error;
@@ -244,12 +254,12 @@ export class BackupService {
   async listBackups(): Promise<BackupMetadata[]> {
     try {
       await this.initialize();
-      
+
       const files = await fs.readdir(this.backupDir);
       const backupFiles = files.filter(file => file.endsWith('.backup'));
-      
+
       const backups: BackupMetadata[] = [];
-      
+
       for (const file of backupFiles) {
         try {
           const backupPath = path.join(this.backupDir, file);
@@ -257,13 +267,18 @@ export class BackupService {
           const backupData: BackupData = JSON.parse(content);
           backups.push(backupData.metadata);
         } catch (error) {
-          this.logger.warn(`Failed to read backup metadata from ${file}`, error as Error);
+          this.logger.warn(
+            `Failed to read backup metadata from ${file}`,
+            error as Error
+          );
         }
       }
 
       // Sort by timestamp (newest first)
-      return backups.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
+      return backups.sort(
+        (a, b) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
     } catch (error) {
       this.logger.error('Failed to list backups', error as Error);
       return [];
@@ -285,26 +300,27 @@ export class BackupService {
   async getBackupStats(): Promise<BackupStats> {
     try {
       const backups = await this.listBackups();
-      
+
       const stats: BackupStats = {
         totalBackups: backups.length,
         totalSize: backups.reduce((sum, backup) => sum + backup.size, 0),
-        oldestBackup: backups.length > 0 ? backups[backups.length - 1].timestamp : null,
+        oldestBackup:
+          backups.length > 0 ? backups[backups.length - 1].timestamp : null,
         newestBackup: backups.length > 0 ? backups[0].timestamp : null,
         backupsByType: {},
-        healthScore: 0
+        healthScore: 0,
       };
 
       // Count backups by type
       backups.forEach(backup => {
-        stats.backupsByType[backup.type] = (stats.backupsByType[backup.type] || 0) + 1;
+        stats.backupsByType[backup.type] =
+          (stats.backupsByType[backup.type] || 0) + 1;
       });
 
       // Calculate health score (0-100)
       stats.healthScore = this.calculateHealthScore(backups);
 
       return stats;
-
     } catch (error) {
       this.logger.error('Failed to get backup stats', error as Error);
       return {
@@ -313,7 +329,7 @@ export class BackupService {
         oldestBackup: null,
         newestBackup: null,
         backupsByType: {},
-        healthScore: 0
+        healthScore: 0,
       };
     }
   }
@@ -326,7 +342,7 @@ export class BackupService {
         frequency: 'weekly',
         maxBackups: 10,
         lastBackup: undefined,
-        compress: true
+        compress: true,
       };
     } catch (error) {
       this.logger.error('Failed to get auto backup settings', error as Error);
@@ -334,17 +350,22 @@ export class BackupService {
         enabled: false,
         frequency: 'weekly',
         maxBackups: 10,
-        compress: true
+        compress: true,
       };
     }
   }
 
-  async updateAutoBackupSettings(settings: Partial<AutoBackupSettings>): Promise<void> {
+  async updateAutoBackupSettings(
+    settings: Partial<AutoBackupSettings>
+  ): Promise<void> {
     try {
       // Mock implementation - in real app, this would save to config
       this.logger.info('Auto backup settings updated', settings);
     } catch (error) {
-      this.logger.error('Failed to update auto backup settings', error as Error);
+      this.logger.error(
+        'Failed to update auto backup settings',
+        error as Error
+      );
       throw error;
     }
   }
@@ -361,18 +382,17 @@ export class BackupService {
       // Keep only the 5 most recent backups, suggest others for cleanup
       if (backups.length > 5) {
         const oldBackups = backups.slice(5);
-        
+
         oldBackups.forEach(backup => {
           suggestions.push({
             id: backup.id,
             filename: `${backup.id}.backup`,
-            reason: 'Old backup (older than 5 most recent)'
+            reason: 'Old backup (older than 5 most recent)',
           });
         });
       }
 
       return suggestions;
-
     } catch (error) {
       this.logger.error('Failed to get cleanup suggestions', error as Error);
       return [];
@@ -387,7 +407,7 @@ export class BackupService {
       for (const backupId of backupIds) {
         const backups = await this.listBackups();
         const backup = backups.find(b => b.id === backupId);
-        
+
         if (backup) {
           totalSizeFreed += backup.size;
         }
@@ -403,9 +423,8 @@ export class BackupService {
       return {
         deletedCount,
         spaceFreed: `${Math.round(totalSizeFreed / 1024)} KB`,
-        remainingBackups: remainingBackups.length
+        remainingBackups: remainingBackups.length,
       };
-
     } catch (error) {
       this.logger.error('Failed to cleanup backups', error as Error);
       throw error;
@@ -420,7 +439,10 @@ export class BackupService {
       const enhancedStats: BackupStatistics = {
         totalBackups: stats.totalBackups,
         totalSize: `${Math.round(stats.totalSize / 1024)} KB`,
-        averageSize: stats.totalBackups > 0 ? `${Math.round(stats.totalSize / stats.totalBackups / 1024)} KB` : '0 KB',
+        averageSize:
+          stats.totalBackups > 0
+            ? `${Math.round(stats.totalSize / stats.totalBackups / 1024)} KB`
+            : '0 KB',
         oldestBackup: stats.oldestBackup || 'None',
         newestBackup: stats.newestBackup || 'None',
         fullBackups: stats.backupsByType['full'] || 0,
@@ -430,12 +452,15 @@ export class BackupService {
         uncompressedBackups: backups.filter(b => !b.compressed).length,
         spaceSaved: '~25%', // Estimated
         backupHealth: stats.healthScore,
-        healthSummary: stats.healthScore >= 80 ? 'Excellent backup health' : 
-                      stats.healthScore >= 60 ? 'Good backup health' : 'Backup health needs improvement'
+        healthSummary:
+          stats.healthScore >= 80
+            ? 'Excellent backup health'
+            : stats.healthScore >= 60
+              ? 'Good backup health'
+              : 'Backup health needs improvement',
       };
 
       return enhancedStats;
-
     } catch (error) {
       this.logger.error('Failed to get backup statistics', error as Error);
       throw error;
@@ -462,7 +487,6 @@ export class BackupService {
 
       this.logger.info(`Cleaned up ${deletedCount} old backups`);
       return deletedCount;
-
     } catch (error) {
       this.logger.error('Failed to cleanup old backups', error as Error);
       return 0;
@@ -478,9 +502,11 @@ export class BackupService {
 
       await this.validateBackup(backupData);
       return true;
-
     } catch (error) {
-      this.logger.error(`Backup verification failed for ${backupId}`, error as Error);
+      this.logger.error(
+        `Backup verification failed for ${backupId}`,
+        error as Error
+      );
       return false;
     }
   }
@@ -489,19 +515,18 @@ export class BackupService {
     try {
       const backups = await this.listBackups();
       const stats = await this.getBackupStats();
-      
+
       const inventory = {
         generatedAt: new Date().toISOString(),
         statistics: stats,
-        backups: backups
+        backups: backups,
       };
 
       const exportPath = path.join(this.backupDir, 'backup-inventory.json');
       await fs.writeFile(exportPath, JSON.stringify(inventory, null, 2));
-      
+
       this.logger.info('Backup inventory exported successfully');
       return exportPath;
-
     } catch (error) {
       this.logger.error('Failed to export backup inventory', error as Error);
       throw error;
@@ -531,13 +556,19 @@ export class BackupService {
     }
 
     // Validate data integrity based on type
-    if (backupData.metadata.type === 'full' || backupData.metadata.type === 'loans-only') {
+    if (
+      backupData.metadata.type === 'full' ||
+      backupData.metadata.type === 'loans-only'
+    ) {
       if (!Array.isArray(backupData.loans)) {
         throw new Error('Invalid loans data in backup');
       }
     }
 
-    if (backupData.metadata.type === 'full' || backupData.metadata.type === 'settings-only') {
+    if (
+      backupData.metadata.type === 'full' ||
+      backupData.metadata.type === 'settings-only'
+    ) {
       if (!backupData.settings) {
         throw new Error('Invalid settings data in backup');
       }
@@ -563,8 +594,9 @@ export class BackupService {
 
     // Recent backup bonus (40 points max)
     const latestBackup = new Date(backups[0].timestamp);
-    const daysSinceLatest = (Date.now() - latestBackup.getTime()) / (1000 * 60 * 60 * 24);
-    
+    const daysSinceLatest =
+      (Date.now() - latestBackup.getTime()) / (1000 * 60 * 60 * 24);
+
     if (daysSinceLatest <= 1) score += 40;
     else if (daysSinceLatest <= 7) score += 30;
     else if (daysSinceLatest <= 30) score += 20;
@@ -583,8 +615,10 @@ export class BackupService {
     if (types.has('settings-only')) score += 5;
 
     // Size efficiency bonus (10 points max)
-    const avgSize = backups.reduce((sum, b) => sum + b.size, 0) / backups.length;
-    if (avgSize < 1024 * 1024) score += 10; // Less than 1MB average
+    const avgSize =
+      backups.reduce((sum, b) => sum + b.size, 0) / backups.length;
+    if (avgSize < 1024 * 1024)
+      score += 10; // Less than 1MB average
     else if (avgSize < 5 * 1024 * 1024) score += 5; // Less than 5MB average
 
     return Math.min(100, score);

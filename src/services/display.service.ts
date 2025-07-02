@@ -56,7 +56,7 @@ export class DisplayService {
       borders: true,
       padding: 1,
       margin: 1,
-      alignment: 'left'
+      alignment: 'left',
     };
   }
 
@@ -64,83 +64,94 @@ export class DisplayService {
 
   showWelcomeBanner(): void {
     console.clear();
-    
+
     const title = figlet.textSync('TRACKER', {
       font: 'Big',
       horizontalLayout: 'default',
-      verticalLayout: 'default'
+      verticalLayout: 'default',
     });
-    
+
     console.log(gradient.rainbow(title));
     console.log();
-    
+
     const authorBox = boxen(
-      chalk.cyan.bold('🏦 PROFESSIONAL LOAN MANAGEMENT TOOLKIT') + '\n\n' +
-      chalk.white('👨‍💻 Developer: ') + chalk.cyan('John Ilesanmi') + '\n' +
-      chalk.white('📱 Instagram: ') + chalk.magenta('@numcalm') + '\n' +
-      chalk.white('🐙 GitHub: ') + chalk.blue('@tamecalm') + '\n' +
-      chalk.white('📅 Start Date: ') + chalk.yellow('27th July 2025') + '\n' +
-      chalk.white('🚀 Version: ') + chalk.green('2.0.0') + ' - Professional Edition',
+      chalk.cyan.bold('🏦 PROFESSIONAL LOAN MANAGEMENT TOOLKIT') +
+        '\n\n' +
+        chalk.white('👨‍💻 Developer: ') +
+        chalk.cyan('John Ilesanmi') +
+        '\n' +
+        chalk.white('📱 Instagram: ') +
+        chalk.magenta('@numcalm') +
+        '\n' +
+        chalk.white('🐙 GitHub: ') +
+        chalk.blue('@tamecalm') +
+        '\n' +
+        chalk.white('📅 Start Date: ') +
+        chalk.yellow('27th July 2025') +
+        '\n' +
+        chalk.white('🚀 Version: ') +
+        chalk.green('2.0.0') +
+        ' - Professional Edition',
       {
         padding: 1,
         margin: 1,
         borderStyle: 'double',
         borderColor: 'cyan',
-        textAlignment: 'center'
+        textAlignment: 'center',
       }
     );
-    
+
     console.log(authorBox);
     console.log();
   }
 
   showSectionHeader(title: string, subtitle?: string, icon?: string): void {
     console.clear();
-    
-    const headerContent = 
-      (icon ? `${icon} ` : '🏦 ') + 
+
+    const headerContent =
+      (icon ? `${icon} ` : '🏦 ') +
       chalk.cyan.bold(title.toUpperCase()) +
       (subtitle ? '\n' + chalk.gray(subtitle) : '');
-    
+
     const header = boxen(headerContent, {
       padding: 1,
       margin: 1,
       borderStyle: 'double',
       borderColor: 'cyan',
-      textAlignment: 'center'
+      textAlignment: 'center',
     });
-    
+
     console.log(header);
     console.log();
   }
 
   showSubHeader(text: string, color: string = 'yellow'): void {
-    const subHeader = boxen(
-      this.getChalkColor(color)(text),
-      {
-        padding: 0,
-        margin: { top: 0, bottom: 1, left: 2, right: 2 },
-        borderStyle: 'single',
-        borderColor: color,
-        textAlignment: 'center'
-      }
-    );
-    
+    const subHeader = boxen(this.getChalkColor(color)(text), {
+      padding: 0,
+      margin: { top: 0, bottom: 1, left: 2, right: 2 },
+      borderStyle: 'single',
+      borderColor: color,
+      textAlignment: 'center',
+    });
+
     console.log(subHeader);
   }
 
   // ==================== TABLES ====================
 
-  createTable(columns: TableColumn[], options?: DisplayOptions): cliTable3.Table {
+  createTable(
+    columns: TableColumn[],
+    options?: DisplayOptions
+  ): cliTable3.Table {
     const opts = { ...this.defaultOptions, ...options };
-    
+
     const tableConfig: any = {
       head: columns.map(col => chalk.cyan.bold(col.header)),
       style: {
         head: [],
         border: opts.color ? ['cyan'] : [],
-        compact: false
-      }
+        compact: false,
+      },
     };
 
     // Set column widths if specified
@@ -158,42 +169,67 @@ export class DisplayService {
 
   showLoanTable(loans: LoanModel[], options?: DisplayOptions): void {
     if (loans.length === 0) {
-      this.showEmptyState('No loans found', '💰 Add your first loan to get started!');
+      this.showEmptyState(
+        'No loans found',
+        '💰 Add your first loan to get started!'
+      );
       return;
     }
 
     const columns: TableColumn[] = [
-      { header: 'ID', key: 'id', width: 10, formatter: (val) => val.slice(0, 8) },
+      { header: 'ID', key: 'id', width: 10, formatter: val => val.slice(0, 8) },
       { header: 'Lender', key: 'lenderName', width: 15 },
       { header: 'Phone', key: 'phoneNumber', width: 15 },
-      { header: 'Amount', key: 'amount', width: 12, alignment: 'right', formatter: formatCurrency },
-      { header: 'Due Date', key: 'repaymentDate', width: 12, formatter: formatDate },
-      { header: 'Interest', key: 'interestRate', width: 10, alignment: 'center', formatter: (val) => val ? `${val}%` : 'None' },
-      { header: 'Status', key: 'status', width: 12, alignment: 'center' }
+      {
+        header: 'Amount',
+        key: 'amount',
+        width: 12,
+        alignment: 'right',
+        formatter: formatCurrency,
+      },
+      {
+        header: 'Due Date',
+        key: 'repaymentDate',
+        width: 12,
+        formatter: formatDate,
+      },
+      {
+        header: 'Interest',
+        key: 'interestRate',
+        width: 10,
+        alignment: 'center',
+        formatter: val => (val ? `${val}%` : 'None'),
+      },
+      { header: 'Status', key: 'status', width: 12, alignment: 'center' },
     ];
 
     const table = this.createTable(columns, options);
 
     loans.forEach(loan => {
-      const status = loan.isPaid 
+      const status = loan.isPaid
         ? chalk.green('✅ Paid')
-        : loan.isOverdue() 
+        : loan.isOverdue()
           ? chalk.red('⚠️ Overdue')
           : chalk.yellow('⏳ Pending');
 
       const totalAmount = loan.calculateTotalWithInterest();
-      
+
       table.push([
         chalk.gray(loan.id.slice(0, 8)),
         chalk.white(loan.lenderName),
         chalk.blue(loan.phoneNumber),
-        loan.isPaid ? chalk.green(formatCurrency(totalAmount)) : 
-        loan.isOverdue() ? chalk.red(formatCurrency(totalAmount)) : 
-        chalk.yellow(formatCurrency(totalAmount)),
-        loan.isOverdue() ? chalk.red(formatDate(loan.repaymentDate)) : 
-        chalk.white(formatDate(loan.repaymentDate)),
-        loan.interestRate ? chalk.cyan(`${loan.interestRate}%`) : chalk.gray('None'),
-        status
+        loan.isPaid
+          ? chalk.green(formatCurrency(totalAmount))
+          : loan.isOverdue()
+            ? chalk.red(formatCurrency(totalAmount))
+            : chalk.yellow(formatCurrency(totalAmount)),
+        loan.isOverdue()
+          ? chalk.red(formatDate(loan.repaymentDate))
+          : chalk.white(formatDate(loan.repaymentDate)),
+        loan.interestRate
+          ? chalk.cyan(`${loan.interestRate}%`)
+          : chalk.gray('None'),
+        status,
       ]);
     });
 
@@ -210,13 +246,13 @@ export class DisplayService {
     const table = new cliTable3({
       style: {
         head: [],
-        border: ['cyan']
-      }
+        border: ['cyan'],
+      },
     });
 
     Object.entries(data).forEach(([key, value]) => {
       let formattedValue = value;
-      
+
       if (typeof value === 'number' && key.toLowerCase().includes('amount')) {
         formattedValue = formatCurrency(value);
       } else if (typeof value === 'number') {
@@ -225,10 +261,7 @@ export class DisplayService {
         formattedValue = value ? chalk.green('Yes') : chalk.red('No');
       }
 
-      table.push([
-        chalk.cyan(key),
-        chalk.white(formattedValue)
-      ]);
+      table.push([chalk.cyan(key), chalk.white(formattedValue)]);
     });
 
     console.log(table.toString());
@@ -239,7 +272,7 @@ export class DisplayService {
 
   showNotification(options: NotificationOptions): void {
     const { type, title, message, persistent = false } = options;
-    
+
     let icon: string;
     let color: string;
     let borderColor: string;
@@ -268,7 +301,7 @@ export class DisplayService {
         break;
     }
 
-    const content = 
+    const content =
       `${icon} ${title ? chalk.bold(title) : ''}` +
       (title ? '\n' : '') +
       this.getChalkColor(color)(message);
@@ -278,7 +311,7 @@ export class DisplayService {
       margin: 1,
       borderStyle: 'round',
       borderColor: borderColor,
-      textAlignment: 'left'
+      textAlignment: 'left',
     });
 
     console.log(notification);
@@ -314,16 +347,28 @@ export class DisplayService {
   }
 
   createProgressBar(options: ProgressBarOptions): cliProgress.SingleBar {
-    const { title, total, format, barCompleteChar, barIncompleteChar, hideCursor } = options;
-    
-    const progressBar = new cliProgress.SingleBar({
-      format: format || `${title || 'Progress'} |{bar}| {percentage}% | {value}/{total} | ETA: {eta}s`,
-      barCompleteChar: barCompleteChar || '█',
-      barIncompleteChar: barIncompleteChar || '░',
-      hideCursor: hideCursor !== false,
-      clearOnComplete: false,
-      stopOnComplete: true
-    }, cliProgress.Presets.shades_classic);
+    const {
+      title,
+      total,
+      format,
+      barCompleteChar,
+      barIncompleteChar,
+      hideCursor,
+    } = options;
+
+    const progressBar = new cliProgress.SingleBar(
+      {
+        format:
+          format ||
+          `${title || 'Progress'} |{bar}| {percentage}% | {value}/{total} | ETA: {eta}s`,
+        barCompleteChar: barCompleteChar || '█',
+        barIncompleteChar: barIncompleteChar || '░',
+        hideCursor: hideCursor !== false,
+        clearOnComplete: false,
+        stopOnComplete: true,
+      },
+      cliProgress.Presets.shades_classic
+    );
 
     progressBar.start(total, options.current || 0);
     return progressBar;
@@ -332,8 +377,10 @@ export class DisplayService {
   // ==================== SPECIAL DISPLAYS ====================
 
   showEmptyState(title: string, subtitle?: string, icon?: string): void {
-    const content = 
-      (icon || '📭') + ' ' + chalk.gray.bold(title) +
+    const content =
+      (icon || '📭') +
+      ' ' +
+      chalk.gray.bold(title) +
       (subtitle ? '\n' + chalk.gray(subtitle) : '');
 
     const emptyBox = boxen(content, {
@@ -341,23 +388,29 @@ export class DisplayService {
       margin: 2,
       borderStyle: 'single',
       borderColor: 'gray',
-      textAlignment: 'center'
+      textAlignment: 'center',
     });
 
     console.log(emptyBox);
   }
 
-  showStatCard(title: string, value: string | number, icon?: string, color?: string): void {
+  showStatCard(
+    title: string,
+    value: string | number,
+    icon?: string,
+    color?: string
+  ): void {
     const cardColor = color || 'cyan';
     const cardIcon = icon || '📊';
-    
+
     let formattedValue = value.toString();
     if (typeof value === 'number' && title.toLowerCase().includes('amount')) {
       formattedValue = formatCurrency(value);
     }
 
-    const content = 
-      this.getChalkColor(cardColor).bold(`${cardIcon} ${title}`) + '\n' +
+    const content =
+      this.getChalkColor(cardColor).bold(`${cardIcon} ${title}`) +
+      '\n' +
       chalk.white.bold(formattedValue);
 
     const card = boxen(content, {
@@ -366,38 +419,49 @@ export class DisplayService {
       borderStyle: 'single',
       borderColor: cardColor,
       textAlignment: 'center',
-      width: 20
+      width: 20,
     });
 
     console.log(card);
   }
 
-  showStatGrid(stats: Array<{ title: string; value: string | number; icon?: string; color?: string }>): void {
+  showStatGrid(
+    stats: Array<{
+      title: string;
+      value: string | number;
+      icon?: string;
+      color?: string;
+    }>
+  ): void {
     const cardsPerRow = 3;
     const rows = Math.ceil(stats.length / cardsPerRow);
 
     for (let row = 0; row < rows; row++) {
       const rowStats = stats.slice(row * cardsPerRow, (row + 1) * cardsPerRow);
-      
+
       // Create cards for this row
       const cards = rowStats.map(stat => {
         const cardColor = stat.color || 'cyan';
         const cardIcon = stat.icon || '📊';
-        
+
         let formattedValue = stat.value.toString();
-        if (typeof stat.value === 'number' && stat.title.toLowerCase().includes('amount')) {
+        if (
+          typeof stat.value === 'number' &&
+          stat.title.toLowerCase().includes('amount')
+        ) {
           formattedValue = formatCurrency(stat.value);
         }
 
         return boxen(
-          this.getChalkColor(cardColor).bold(`${cardIcon} ${stat.title}`) + '\n' +
-          chalk.white.bold(formattedValue),
+          this.getChalkColor(cardColor).bold(`${cardIcon} ${stat.title}`) +
+            '\n' +
+            chalk.white.bold(formattedValue),
           {
             padding: 1,
             borderStyle: 'single',
             borderColor: cardColor,
             textAlignment: 'center',
-            width: 22
+            width: 22,
           }
         );
       });
@@ -407,12 +471,12 @@ export class DisplayService {
       const maxLines = Math.max(...lines.map(l => l.length));
 
       for (let lineIndex = 0; lineIndex < maxLines; lineIndex++) {
-        const line = lines.map(cardLines => 
-          cardLines[lineIndex] || ' '.repeat(22)
-        ).join('  ');
+        const line = lines
+          .map(cardLines => cardLines[lineIndex] || ' '.repeat(22))
+          .join('  ');
         console.log(line);
       }
-      
+
       console.log(); // Space between rows
     }
   }
@@ -425,7 +489,7 @@ export class DisplayService {
 
     Object.entries(data).forEach(([key, value]) => {
       let formattedValue = value;
-      
+
       if (typeof value === 'number' && key.toLowerCase().includes('amount')) {
         formattedValue = chalk.green(formatCurrency(value));
       } else if (typeof value === 'number') {
@@ -440,7 +504,7 @@ export class DisplayService {
 
       console.log(`  ${chalk.cyan('•')} ${chalk.gray(key)}: ${formattedValue}`);
     });
-    
+
     console.log();
   }
 
@@ -454,7 +518,11 @@ export class DisplayService {
     console.log('\n'.repeat(lines - 1));
   }
 
-  showSeparator(char: string = '─', length: number = 60, color: string = 'gray'): void {
+  showSeparator(
+    char: string = '─',
+    length: number = 60,
+    color: string = 'gray'
+  ): void {
     console.log(this.getChalkColor(color)(char.repeat(length)));
   }
 
@@ -466,7 +534,7 @@ export class DisplayService {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     if (bytes === 0) return '0 Bytes';
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
-    return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i];
+    return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + ' ' + sizes[i];
   }
 
   formatDuration(seconds: number): string {
@@ -490,27 +558,32 @@ export class DisplayService {
 
   // ==================== INTERACTIVE DISPLAYS ====================
 
-  async showConfirmation(message: string, defaultValue: boolean = false): Promise<boolean> {
+  async showConfirmation(
+    message: string,
+    defaultValue: boolean = false
+  ): Promise<boolean> {
     const inquirer = await import('inquirer');
     const { confirmed } = await inquirer.default.prompt([
       {
         type: 'confirm',
         name: 'confirmed',
         message: chalk.yellow(`❓ ${message}`),
-        default: defaultValue
-      }
+        default: defaultValue,
+      },
     ]);
     return confirmed;
   }
 
-  async showPause(message: string = 'Press Enter to continue...'): Promise<void> {
+  async showPause(
+    message: string = 'Press Enter to continue...'
+  ): Promise<void> {
     const inquirer = await import('inquirer');
     await inquirer.default.prompt([
       {
         type: 'input',
         name: 'continue',
-        message: chalk.gray(message)
-      }
+        message: chalk.gray(message),
+      },
     ]);
   }
 
@@ -518,16 +591,22 @@ export class DisplayService {
 
   showErrorDetails(error: Error, context?: string): void {
     const errorBox = boxen(
-      chalk.red.bold('❌ ERROR DETAILS') + '\n\n' +
-      (context ? chalk.yellow(`Context: ${context}`) + '\n' : '') +
-      chalk.white(`Message: ${error.message}`) + '\n' +
-      (error.stack ? chalk.gray(`Stack: ${error.stack.split('\n').slice(0, 3).join('\n')}`) : ''),
+      chalk.red.bold('❌ ERROR DETAILS') +
+        '\n\n' +
+        (context ? chalk.yellow(`Context: ${context}`) + '\n' : '') +
+        chalk.white(`Message: ${error.message}`) +
+        '\n' +
+        (error.stack
+          ? chalk.gray(
+              `Stack: ${error.stack.split('\n').slice(0, 3).join('\n')}`
+            )
+          : ''),
       {
         padding: 1,
         margin: 1,
         borderStyle: 'single',
         borderColor: 'red',
-        textAlignment: 'left'
+        textAlignment: 'left',
       }
     );
 
@@ -537,11 +616,11 @@ export class DisplayService {
   showValidationErrors(errors: string[]): void {
     console.log(chalk.red.bold('❌ Validation Errors:'));
     console.log();
-    
+
     errors.forEach((error, index) => {
       console.log(`  ${chalk.red(`${index + 1}.`)} ${chalk.white(error)}`);
     });
-    
+
     console.log();
   }
 
