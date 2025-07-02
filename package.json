@@ -1,7 +1,6 @@
 {
   "name": "loantrack-pro",
   "version": "2.0.0",
-  "type": "module",
   "description": "A world-class CLI-based loan tracking toolkit for Termux",
   "main": "dist/index.js",
   "bin": {
