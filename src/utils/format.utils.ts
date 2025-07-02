@@ -1,8 +1,12 @@
 import { LoanModel } from '../models/loan.model';
-import { formatDate } from './date.utils';
+import { formatDate as formatDateUtil } from './date.utils';
 
 export function formatCurrency(amount: number): string {
   return `₦${amount.toLocaleString('en-NG')}`;
+}
+
+export function formatDate(date: string): string {
+  return formatDateUtil(date);
 }
 
 export function formatLoanTable(loans: LoanModel[]): string {
