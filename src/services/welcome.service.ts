@@ -144,7 +144,7 @@ export class WelcomeService {
         `${chalk.red('⚠️')} Overdue: ${chalk.white.bold(stats.overdueLoans.toString())}` + '\n' +
         `${chalk.blue('⏳')} Pending: ${chalk.white.bold(stats.pendingLoans.toString())}` + '\n' +
         `${chalk.green('✅')} Paid: ${chalk.white.bold(stats.paidLoans.toString())}` +
-        (stats.nextDueDate ? '\n' + `${chalk.orange('📅')} Next Due: ${chalk.white.bold(stats.nextDueDate)}` : ''),
+        (stats.nextDueDate ? '\n' + `${chalk.hex('#FFA500')('📅')} Next Due: ${chalk.white.bold(stats.nextDueDate)}` : ''),
         {
           padding: 1,
           margin: 1,
@@ -505,7 +505,7 @@ export class WelcomeService {
 
   private showSpecialMessage(title: string, message: string): void {
     const specialBox = boxen(
-      chalk.rainbow(title) + '\n\n' +
+      gradient.rainbow(title) + '\n\n' +
       chalk.white(message),
       {
         padding: 1,
