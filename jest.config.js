@@ -60,7 +60,7 @@ module.exports = {
   setupFilesAfterEnv: [],
 
   // Module name mapping for absolute imports
-  moduleNameMapping: {
+  moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/$1',
     '^@controllers/(.*)$': '<rootDir>/controllers/$1',
     '^@services/(.*)$': '<rootDir>/services/$1',
