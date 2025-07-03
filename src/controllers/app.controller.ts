@@ -192,16 +192,17 @@ export class AppController {
     services: Record<string, boolean>;
     errors: string[];
   }> {
-    const health = {
-      status: 'healthy' as const,
-      services: {} as Record<string, boolean>,
-      errors: [] as string[],
+    const health: {
+      status: 'healthy' | 'degraded' | 'unhealthy';
+      services: Record<string, boolean>;
+      errors: string[];
+    } = {
+      status: 'healthy',
+      services: {},
+      errors: [],
     };
 
     try {
-      // Check logger
-      health.services.logger = this.logger.isInitialized();
-
       // Check error handler
       health.services.errorHandler = this.errorHandler.isInitialized();
 
