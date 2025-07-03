@@ -4,4 +4,8 @@ data/loans.json
 .env
 logs/
 data/
-
+/coverage/
+.vscode/
+.DS_Store
+.jest-cache
+npm-debug.log
