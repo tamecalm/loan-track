@@ -29,8 +29,7 @@ export class MainMenuController {
   async show(): Promise<void> {
     try {
       while (true) {
-        console.clear();
-        this.displayHeader();
+        this.displayMainMenu();
 
         const choice = await this.getMenuChoice();
 
@@ -47,17 +46,20 @@ export class MainMenuController {
     }
   }
 
-  private displayHeader(): void {
+  private displayMainMenu(): void {
+    // Don't clear screen here - let the welcome service handle the initial display
+    // Only show a compact header for subsequent menu displays
     const header = boxen(
-      chalk.cyan.bold('🏦 LOANTRACK PRO - MAIN MENU') +
+      chalk.cyan.bold('📋 MAIN MENU') +
         '\n' +
-        chalk.gray('Professional Loan Management Toolkit'),
+        chalk.gray('Select an option to continue'),
       {
         padding: 1,
         margin: 1,
-        borderStyle: 'double',
+        borderStyle: 'single',
         borderColor: 'cyan',
         textAlignment: 'center',
+        width: Math.min(process.stdout.columns - 4, 60),
       }
     );
 
@@ -108,8 +110,12 @@ export class MainMenuController {
     const spinner = createSpinner('Loading...').start();
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 500)); // Brief loading animation
+      // Brief loading animation for better UX
+      await new Promise(resolve => setTimeout(resolve, 300));
       spinner.stop();
+
+      // Clear screen before showing the selected module
+      console.clear();
 
       switch (choice) {
         case 'loans':
@@ -131,8 +137,8 @@ export class MainMenuController {
           console.log(chalk.red('❌ Invalid option selected'));
       }
 
-      // Pause before returning to menu
-      await this.pauseForUser();
+      // After completing an operation, show return prompt
+      await this.showReturnPrompt();
     } catch (error) {
       spinner.error({ text: 'Failed to load menu option' });
       this.logger.error(
@@ -140,43 +146,28 @@ export class MainMenuController {
         error as Error
       );
       console.error(chalk.red(`❌ Error loading ${choice}`));
-      await this.pauseForUser();
+      await this.showReturnPrompt();
     }
   }
 
-  private async handleExit(): Promise<void> {
-    const spinner = createSpinner('Shutting down LoanTrack Pro...').start();
+  private async showReturnPrompt(): Promise<void> {
+    console.log();
+    const returnPrompt = boxen(
+      chalk.cyan('🔄 Operation Complete') +
+        '\n' +
+        chalk.gray('Press Enter to return to main menu'),
+      {
+        padding: 1,
+        margin: 1,
+        borderStyle: 'single',
+        borderColor: 'cyan',
+        textAlignment: 'center',
+        width: Math.min(process.stdout.columns - 4, 50),
+      }
+    );
 
-    try {
-      // Perform cleanup operations
-      await new Promise(resolve => setTimeout(resolve, 1000));
+    console.log(returnPrompt);
 
-      spinner.success({ text: 'Shutdown complete!' });
-
-      console.log();
-      console.log(
-        boxen(
-          chalk.cyan('👋 Thank you for using LoanTrack Pro!') +
-            '\n' +
-            chalk.gray('Created with ❤️  by John Ilesanmi') +
-            '\n' +
-            chalk.blue('Instagram: @numcalm | GitHub: @tamecalm'),
-          {
-            padding: 1,
-            margin: 1,
-            borderStyle: 'round',
-            borderColor: 'blue',
-            textAlignment: 'center',
-          }
-        )
-      );
-    } catch (error) {
-      spinner.error({ text: 'Error during shutdown' });
-      this.logger.error('Error during application shutdown', error as Error);
-    }
-  }
-
-  private async pauseForUser(): Promise<void> {
     await inquirer.prompt([
       {
         type: 'input',
@@ -184,6 +175,58 @@ export class MainMenuController {
         message: chalk.gray('Press Enter to continue...'),
       },
     ]);
+
+    // Clear screen before returning to main menu
+    console.clear();
+  }
+
+  private async handleExit(): Promise<void> {
+    console.clear();
+    
+    const spinner = createSpinner('Shutting down LoanTrack Pro...').start();
+
+    try {
+      // Perform cleanup operations
+      await new Promise(resolve => setTimeout(resolve, 800));
+      spinner.update({ text: 'Saving data...' });
+
+      await new Promise(resolve => setTimeout(resolve, 600));
+      spinner.update({ text: 'Cleaning up resources...' });
+
+      await new Promise(resolve => setTimeout(resolve, 400));
+      spinner.success({ text: 'Shutdown complete!' });
+
+      console.log();
+      
+      // Show goodbye message
+      const goodbyeMessage = boxen(
+        chalk.cyan('👋 Thank you for using LoanTrack Pro!') +
+          '\n\n' +
+          chalk.white('Your financial data has been saved securely.') +
+          '\n' +
+          chalk.gray('Created with ❤️  by John Ilesanmi') +
+          '\n\n' +
+          chalk.blue('📱 Instagram: @numcalm') +
+          '\n' +
+          chalk.blue('🐙 GitHub: @tamecalm'),
+        {
+          padding: 1,
+          margin: 1,
+          borderStyle: 'round',
+          borderColor: 'blue',
+          textAlignment: 'center',
+          width: Math.min(process.stdout.columns - 4, 60),
+        }
+      );
+
+      console.log(goodbyeMessage);
+      
+      // Brief pause before exit
+      await new Promise(resolve => setTimeout(resolve, 1500));
+    } catch (error) {
+      spinner.error({ text: 'Error during shutdown' });
+      this.logger.error('Error during application shutdown', error as Error);
+    }
   }
 }
 

@@ -3,6 +3,7 @@ import figlet from 'figlet';
 import gradient from 'gradient-string';
 import boxen from 'boxen';
 import { createSpinner } from 'nanospinner';
+import cliProgress from 'cli-progress';
 import { Logger } from '../core/logger';
 import { ConfigManager } from '../core/config-manager';
 import { StorageService } from './storage.service';
@@ -60,68 +61,149 @@ export class WelcomeService {
 
   async showWelcome(): Promise<void> {
     try {
-      const preferences = await this.getUserPreferences();
-
-      if (preferences.showWelcomeAnimation) {
-        await this.showWelcomeAnimation();
-      }
-
-      await this.showMainBanner();
-
-      if (preferences.showDailyStats) {
-        await this.showDailyStats();
-      }
-
-      const welcomeMessage = await this.generateWelcomeMessage();
-      this.displayWelcomeMessage(welcomeMessage);
-
-      if (preferences.showReminders) {
-        await this.showReminders();
-      }
-
-      await this.showQuickActions();
+      console.clear();
+      
+      // Show logo first
+      await this.showLogo();
+      
+      // Show author information
+      this.showAuthorInfo();
+      
+      // Show loading animation while keeping author info visible
+      await this.showLoadingAnimation();
+      
+      // Clear and show main interface
+      console.clear();
+      await this.showMainInterface();
+      
     } catch (error) {
       this.logger.error('Error showing welcome screen', error as Error);
       this.showFallbackWelcome();
     }
   }
 
-  private async showWelcomeAnimation(): Promise<void> {
-    const spinner = createSpinner('Loading LoanTrack Pro...').start();
+  private async showLogo(): Promise<void> {
+    try {
+      const logo = figlet.textSync('NUMORA', {
+        font: 'Big',
+        horizontalLayout: 'fitted',
+        verticalLayout: 'default',
+        width: 80,
+        whitespaceBreak: true
+      });
 
-    // Simulate loading with progress
-    await new Promise(resolve => setTimeout(resolve, 800));
-    spinner.update({ text: 'Initializing loan data...' });
+      console.log(gradient.rainbow(logo));
+      console.log();
+    } catch (error) {
+      // Fallback if figlet fails
+      console.log(gradient.rainbow('NUMORA'));
+      console.log();
+    }
+  }
 
-    await new Promise(resolve => setTimeout(resolve, 600));
-    spinner.update({ text: 'Preparing dashboard...' });
+  private showAuthorInfo(): void {
+    // Get terminal width for responsive design
+    const terminalWidth = process.stdout.columns || 80;
+    const maxWidth = Math.min(terminalWidth - 4, 70); // Leave some margin
 
-    await new Promise(resolve => setTimeout(resolve, 400));
-    spinner.success({ text: 'Welcome to LoanTrack Pro!' });
+    const authorInfo = boxen(
+      chalk.cyan.bold('🏦 LOANTRACK PRO') +
+        '\n' +
+        chalk.white('Professional Loan Management Toolkit') +
+        '\n' +
+        chalk.gray('Version 2.0.0 - Professional Edition') +
+        '\n\n' +
+        chalk.white('👨‍💻 Developer: ') +
+        chalk.cyan('John Ilesanmi') +
+        '\n' +
+        chalk.white('📱 Instagram: ') +
+        chalk.magenta('@numcalm') +
+        '\n' +
+        chalk.white('🐙 GitHub: ') +
+        chalk.blue('@tamecalm') +
+        '\n' +
+        chalk.white('📅 Start Date: ') +
+        chalk.yellow('27th July 2025'),
+      {
+        padding: 1,
+        margin: 1,
+        borderStyle: 'round',
+        borderColor: 'cyan',
+        textAlignment: 'center',
+        width: maxWidth,
+      }
+    );
 
-    await new Promise(resolve => setTimeout(resolve, 500));
+    console.log(authorInfo);
+    console.log();
+  }
+
+  private async showLoadingAnimation(): Promise<void> {
+    console.log(chalk.cyan('🚀 Initializing LoanTrack Pro...'));
+    console.log();
+
+    // Create progress bar
+    const progressBar = new cliProgress.SingleBar({
+      format: chalk.cyan('Loading') + ' |{bar}| {percentage}% | {value}/{total}',
+      barCompleteChar: '█',
+      barIncompleteChar: '░',
+      hideCursor: true,
+      clearOnComplete: false,
+      stopOnComplete: true,
+    }, cliProgress.Presets.shades_classic);
+
+    progressBar.start(100, 0);
+
+    // Simulate loading with realistic steps
+    const loadingSteps = [
+      { progress: 10, delay: 200, message: 'Initializing core systems...' },
+      { progress: 25, delay: 300, message: 'Loading loan database...' },
+      { progress: 40, delay: 250, message: 'Checking data integrity...' },
+      { progress: 55, delay: 200, message: 'Loading user preferences...' },
+      { progress: 70, delay: 300, message: 'Preparing analytics engine...' },
+      { progress: 85, delay: 250, message: 'Finalizing setup...' },
+      { progress: 100, delay: 200, message: 'Ready!' },
+    ];
+
+    for (const step of loadingSteps) {
+      await new Promise(resolve => setTimeout(resolve, step.delay));
+      progressBar.update(step.progress);
+    }
+
+    progressBar.stop();
+    console.log();
+    console.log(chalk.green('✅ LoanTrack Pro loaded successfully!'));
+    
+    // Brief pause before continuing
+    await new Promise(resolve => setTimeout(resolve, 1000));
+  }
+
+  private async showMainInterface(): Promise<void> {
+    // Show main banner
+    await this.showMainBanner();
+
+    const preferences = await this.getUserPreferences();
+
+    if (preferences.showDailyStats) {
+      await this.showDailyStats();
+    }
+
+    const welcomeMessage = await this.generateWelcomeMessage();
+    this.displayWelcomeMessage(welcomeMessage);
+
+    if (preferences.showReminders) {
+      await this.showReminders();
+    }
+
+    await this.showQuickActions();
   }
 
   private async showMainBanner(): Promise<void> {
-    console.clear();
-
-    // ASCII Art Title
-    const title = figlet.textSync('LoanTrack Pro', {
-      font: 'Big',
-      horizontalLayout: 'default',
-      verticalLayout: 'default',
-    });
-
-    console.log(gradient.rainbow(title));
-    console.log();
-
-    // Version and tagline
-    const versionInfo = boxen(
-      chalk.cyan.bold('🏦 PROFESSIONAL LOAN MANAGEMENT TOOLKIT') +
+    // Compact banner for main interface
+    const banner = boxen(
+      chalk.cyan.bold('🏦 LOANTRACK PRO') +
         '\n' +
-        chalk.white('Version 2.0.0 - Professional Edition') +
-        '\n' +
-        chalk.gray('Built for Termux with enterprise-grade features'),
+        chalk.gray('Professional Loan Management Toolkit'),
       {
         padding: 1,
         margin: { top: 0, bottom: 1, left: 2, right: 2 },
@@ -131,7 +213,7 @@ export class WelcomeService {
       }
     );
 
-    console.log(versionInfo);
+    console.log(banner);
   }
 
   private async showDailyStats(): Promise<void> {
