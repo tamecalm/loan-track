@@ -83,8 +83,7 @@ export class AppController {
       // Start the main menu controller
       await this.mainMenuController.show();
       
-      // Show goodbye message when exiting
-      await this.welcomeService.showGoodbye();
+      // NO goodbye message here - main menu controller handles it
     } catch (error) {
       await this.errorHandler.handleError(
         'APPLICATION_ERROR',
