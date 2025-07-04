@@ -63,18 +63,15 @@ export class WelcomeService {
     try {
       console.clear();
       
-      // Show logo first
-      await this.showLogo();
+      // Show standalone LoanTrack Pro message
+      await this.showStandaloneBanner();
       
-      // Show author information
-      this.showAuthorInfo();
-      
-      // Show loading animation while keeping author info visible
+      // Show loading animation
       await this.showLoadingAnimation();
       
-      // Clear and show main interface
+      // Clear and show sequential messages
       console.clear();
-      await this.showMainInterface();
+      await this.showSequentialMessages();
       
     } catch (error) {
       this.logger.error('Error showing welcome screen', error as Error);
@@ -82,31 +79,12 @@ export class WelcomeService {
     }
   }
 
-  private async showLogo(): Promise<void> {
-    try {
-      const logo = figlet.textSync('NUMORA', {
-        font: 'Big',
-        horizontalLayout: 'fitted',
-        verticalLayout: 'default',
-        width: 80,
-        whitespaceBreak: true
-      });
-
-      console.log(gradient.rainbow(logo));
-      console.log();
-    } catch (error) {
-      // Fallback if figlet fails
-      console.log(gradient.rainbow('NUMORA'));
-      console.log();
-    }
-  }
-
-  private showAuthorInfo(): void {
+  private async showStandaloneBanner(): Promise<void> {
     // Get terminal width for responsive design
     const terminalWidth = process.stdout.columns || 80;
-    const maxWidth = Math.min(terminalWidth - 4, 70); // Leave some margin
+    const maxWidth = Math.min(terminalWidth - 4, 70);
 
-    const authorInfo = boxen(
+    const standaloneBanner = boxen(
       chalk.cyan.bold('🏦 LOANTRACK PRO') +
         '\n' +
         chalk.white('Professional Loan Management Toolkit') +
@@ -134,11 +112,14 @@ export class WelcomeService {
       }
     );
 
-    console.log(authorInfo);
-    console.log();
+    console.log(standaloneBanner);
+    
+    // Wait for user to read the banner
+    await new Promise(resolve => setTimeout(resolve, 3000));
   }
 
   private async showLoadingAnimation(): Promise<void> {
+    console.log();
     console.log(chalk.cyan('🚀 Initializing LoanTrack Pro...'));
     console.log();
 
@@ -154,20 +135,10 @@ export class WelcomeService {
 
     progressBar.start(100, 0);
 
-    // Simulate loading with realistic steps
-    const loadingSteps = [
-      { progress: 10, delay: 200, message: 'Initializing core systems...' },
-      { progress: 25, delay: 300, message: 'Loading loan database...' },
-      { progress: 40, delay: 250, message: 'Checking data integrity...' },
-      { progress: 55, delay: 200, message: 'Loading user preferences...' },
-      { progress: 70, delay: 300, message: 'Preparing analytics engine...' },
-      { progress: 85, delay: 250, message: 'Finalizing setup...' },
-      { progress: 100, delay: 200, message: 'Ready!' },
-    ];
-
-    for (const step of loadingSteps) {
-      await new Promise(resolve => setTimeout(resolve, step.delay));
-      progressBar.update(step.progress);
+    // Simulate loading from 1 to 100
+    for (let i = 1; i <= 100; i++) {
+      await new Promise(resolve => setTimeout(resolve, 30)); // 30ms per step = 3 seconds total
+      progressBar.update(i);
     }
 
     progressBar.stop();
@@ -178,45 +149,37 @@ export class WelcomeService {
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
 
-  private async showMainInterface(): Promise<void> {
-    // Show main banner
-    await this.showMainBanner();
-
+  private async showSequentialMessages(): Promise<void> {
     const preferences = await this.getUserPreferences();
 
+    // Show messages one by one with delays
     if (preferences.showDailyStats) {
-      await this.showDailyStats();
+      await this.showDailyStatsSequential();
+      await this.clearAndWait(3000); // 3 seconds to read
     }
 
     const welcomeMessage = await this.generateWelcomeMessage();
-    this.displayWelcomeMessage(welcomeMessage);
+    await this.displayWelcomeMessageSequential(welcomeMessage);
+    await this.clearAndWait(3000); // 3 seconds to read
 
     if (preferences.showReminders) {
-      await this.showReminders();
+      await this.showRemindersSequential();
+      await this.clearAndWait(3000); // 3 seconds to read
     }
 
-    await this.showQuickActions();
+    await this.showQuickActionsSequential();
+    await this.clearAndWait(3000); // 3 seconds to read
+
+    // Final clear before main menu
+    console.clear();
   }
 
-  private async showMainBanner(): Promise<void> {
-    // Compact banner for main interface
-    const banner = boxen(
-      chalk.cyan.bold('🏦 LOANTRACK PRO') +
-        '\n' +
-        chalk.gray('Professional Loan Management Toolkit'),
-      {
-        padding: 1,
-        margin: { top: 0, bottom: 1, left: 2, right: 2 },
-        borderStyle: 'single',
-        borderColor: 'cyan',
-        textAlignment: 'center',
-      }
-    );
-
-    console.log(banner);
+  private async clearAndWait(delay: number): Promise<void> {
+    await new Promise(resolve => setTimeout(resolve, delay));
+    console.clear();
   }
 
-  private async showDailyStats(): Promise<void> {
+  private async showDailyStatsSequential(): Promise<void> {
     try {
       const stats = await this.getWelcomeStats();
 
@@ -251,60 +214,7 @@ export class WelcomeService {
     }
   }
 
-  private async generateWelcomeMessage(): Promise<WelcomeMessage> {
-    try {
-      const stats = await this.getWelcomeStats();
-      const isFirstTime = stats.totalLoans === 0;
-      const hasOverdue = stats.overdueLoans > 0;
-      const hasRecentPayment = await this.checkRecentPayments();
-
-      if (isFirstTime) {
-        return {
-          type: 'first-time',
-          title: 'Welcome to LoanTrack Pro!',
-          message:
-            'Get started by adding your first loan to begin tracking your financial commitments.',
-          action: 'Add your first loan',
-        };
-      }
-
-      if (hasRecentPayment) {
-        return {
-          type: 'celebration',
-          title: 'Great Progress!',
-          message:
-            "You've recently marked loans as paid. Keep up the excellent financial management!",
-          action: 'View recent activity',
-        };
-      }
-
-      if (hasOverdue) {
-        return {
-          type: 'reminder',
-          title: 'Attention Required',
-          message: `You have ${stats.overdueLoans} overdue loan${stats.overdueLoans > 1 ? 's' : ''} that need immediate attention.`,
-          action: 'Review overdue loans',
-        };
-      }
-
-      return {
-        type: 'returning',
-        title: 'Welcome Back!',
-        message: this.getPersonalizedGreeting(stats),
-        action: 'View dashboard',
-      };
-    } catch (error) {
-      this.logger.error('Error generating welcome message', error as Error);
-      return {
-        type: 'returning',
-        title: 'Welcome Back!',
-        message: 'Ready to manage your loans efficiently.',
-        action: 'Continue',
-      };
-    }
-  }
-
-  private displayWelcomeMessage(message: WelcomeMessage): void {
+  private async displayWelcomeMessageSequential(message: WelcomeMessage): Promise<void> {
     let borderColor: string;
     let icon: string;
 
@@ -347,7 +257,7 @@ export class WelcomeService {
     console.log(messageBox);
   }
 
-  private async showReminders(): Promise<void> {
+  private async showRemindersSequential(): Promise<void> {
     try {
       const reminders = await this.getActiveReminders();
 
@@ -382,7 +292,7 @@ export class WelcomeService {
     }
   }
 
-  private async showQuickActions(): Promise<void> {
+  private async showQuickActionsSequential(): Promise<void> {
     const quickActions = boxen(
       chalk.cyan.bold('⚡ QUICK ACTIONS') +
         '\n\n' +
@@ -523,6 +433,59 @@ export class WelcomeService {
     }
 
     return reminders;
+  }
+
+  private async generateWelcomeMessage(): Promise<WelcomeMessage> {
+    try {
+      const stats = await this.getWelcomeStats();
+      const isFirstTime = stats.totalLoans === 0;
+      const hasOverdue = stats.overdueLoans > 0;
+      const hasRecentPayment = await this.checkRecentPayments();
+
+      if (isFirstTime) {
+        return {
+          type: 'first-time',
+          title: 'Welcome to LoanTrack Pro!',
+          message:
+            'Get started by adding your first loan to begin tracking your financial commitments.',
+          action: 'Add your first loan',
+        };
+      }
+
+      if (hasRecentPayment) {
+        return {
+          type: 'celebration',
+          title: 'Great Progress!',
+          message:
+            "You've recently marked loans as paid. Keep up the excellent financial management!",
+          action: 'View recent activity',
+        };
+      }
+
+      if (hasOverdue) {
+        return {
+          type: 'reminder',
+          title: 'Attention Required',
+          message: `You have ${stats.overdueLoans} overdue loan${stats.overdueLoans > 1 ? 's' : ''} that need immediate attention.`,
+          action: 'Review overdue loans',
+        };
+      }
+
+      return {
+        type: 'returning',
+        title: 'Welcome Back!',
+        message: this.getPersonalizedGreeting(stats),
+        action: 'View dashboard',
+      };
+    } catch (error) {
+      this.logger.error('Error generating welcome message', error as Error);
+      return {
+        type: 'returning',
+        title: 'Welcome Back!',
+        message: 'Ready to manage your loans efficiently.',
+        action: 'Continue',
+      };
+    }
   }
 
   private async checkRecentPayments(): Promise<boolean> {
