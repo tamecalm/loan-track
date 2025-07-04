@@ -45,7 +45,7 @@ export class AnalyticsController {
         return;
       }
 
-      await this.displayOverviewStats(loans);
+      await this.displayStatusDistributionOnly(loans);
       await this.showAnalyticsMenu(loans);
     } catch (error) {
       this.logger.error('Error in analytics dashboard', error as Error);
@@ -70,62 +70,17 @@ export class AnalyticsController {
     console.log(header);
   }
 
-  private async displayOverviewStats(loans: LoanModel[]): Promise<void> {
-    const spinner = createSpinner('Calculating analytics...').start();
+  private async displayStatusDistributionOnly(loans: LoanModel[]): Promise<void> {
+    const spinner = createSpinner('Loading analytics...').start();
 
     try {
-      const analytics =
-        await this.analyticsService.generateOverviewAnalytics(loans);
-      spinner.success({ text: 'Analytics calculated successfully!' });
+      const analytics = await this.analyticsService.generateOverviewAnalytics(loans);
+      spinner.stop();
 
-      // Overview Statistics Table
-      const overviewTable = new Table({
-        head: [
-          chalk.cyan('Metric'),
-          chalk.cyan('Value'),
-          chalk.cyan('Details'),
-        ],
-        colWidths: [25, 20, 30],
-        style: {
-          head: ['cyan'],
-          border: ['gray'],
-        },
-      });
-
-      overviewTable.push(
-        [
-          'Total Loans',
-          analytics.totalLoans.toString(),
-          `${analytics.activeLoans} active, ${analytics.paidLoans} paid`,
-        ],
-        [
-          'Total Debt',
-          formatCurrency(analytics.totalDebt),
-          `Including ${formatCurrency(analytics.totalInterest)} interest`,
-        ],
-        [
-          'Average Loan',
-          formatCurrency(analytics.averageLoanAmount),
-          `Range: ${formatCurrency(analytics.smallestLoan)} - ${formatCurrency(analytics.largestLoan)}`,
-        ],
-        [
-          'Overdue Loans',
-          analytics.overdueLoans.toString(),
-          `${formatCurrency(analytics.overdueAmount)} total`,
-        ],
-        [
-          'Payment Rate',
-          `${analytics.paymentRate.toFixed(1)}%`,
-          `${analytics.paidLoans}/${analytics.totalLoans} loans paid`,
-        ]
-      );
-
-      console.log(overviewTable.toString());
-
-      // Status Distribution
+      // Only show Status Distribution
       this.displayStatusDistribution(analytics);
     } catch (error) {
-      spinner.error({ text: 'Failed to calculate analytics' });
+      spinner.error({ text: 'Failed to load analytics' });
       throw error;
     }
   }
@@ -142,6 +97,7 @@ export class AnalyticsController {
         head: ['green'],
         border: ['gray'],
       },
+      colWidths: [20, 10, 18, 15],
     });
 
     const total = analytics.totalLoans;
@@ -219,6 +175,9 @@ export class AnalyticsController {
     choice: string,
     loans: LoanModel[]
   ): Promise<void> {
+    // Clear screen before showing new content
+    console.clear();
+    
     const spinner = createSpinner('Generating report...').start();
 
     try {
@@ -240,7 +199,7 @@ export class AnalyticsController {
           break;
       }
 
-      spinner.success({ text: 'Report generated successfully!' });
+      spinner.stop();
 
       // Ask if user wants to see another report
       const { viewAnother } = await inquirer.prompt([
@@ -253,7 +212,7 @@ export class AnalyticsController {
       ]);
 
       if (viewAnother) {
-        await this.showAnalyticsMenu(loans);
+        await this.showAnalyticsDashboard();
       }
     } catch (error) {
       spinner.error({ text: 'Failed to generate report' });
@@ -262,10 +221,20 @@ export class AnalyticsController {
   }
 
   private async showMonthlyBreakdown(loans: LoanModel[]): Promise<void> {
-    console.log('\n' + chalk.bold('📅 Monthly Loan Breakdown:'));
+    console.log(
+      boxen(
+        chalk.blue.bold('📅 MONTHLY BREAKDOWN'),
+        {
+          padding: 1,
+          margin: 1,
+          borderStyle: 'double',
+          borderColor: 'blue',
+          textAlignment: 'center',
+        }
+      )
+    );
 
-    const monthlyData =
-      await this.analyticsService.generateMonthlyBreakdown(loans);
+    const monthlyData = await this.analyticsService.generateMonthlyBreakdown(loans);
 
     const monthlyTable = new Table({
       head: [
@@ -279,6 +248,7 @@ export class AnalyticsController {
         head: ['cyan'],
         border: ['gray'],
       },
+      colWidths: [15, 12, 18, 8, 10],
     });
 
     monthlyData.forEach(month => {
@@ -295,23 +265,34 @@ export class AnalyticsController {
   }
 
   private async showLenderAnalysis(loans: LoanModel[]): Promise<void> {
-    console.log('\n' + chalk.bold('👥 Lender Analysis:'));
+    console.log(
+      boxen(
+        chalk.green.bold('👥 LENDER ANALYSIS'),
+        {
+          padding: 1,
+          margin: 1,
+          borderStyle: 'double',
+          borderColor: 'green',
+          textAlignment: 'center',
+        }
+      )
+    );
 
-    const lenderData =
-      await this.analyticsService.generateLenderAnalysis(loans);
+    const lenderData = await this.analyticsService.generateLenderAnalysis(loans);
 
     const lenderTable = new Table({
       head: [
         chalk.green('Lender'),
-        chalk.green('Total Loans'),
-        chalk.green('Total Amount'),
+        chalk.green('Loans'),
+        chalk.green('Amount'),
         chalk.green('Paid Rate'),
-        chalk.green('Risk Level'),
+        chalk.green('Risk'),
       ],
       style: {
         head: ['green'],
         border: ['gray'],
       },
+      colWidths: [20, 8, 18, 12, 10],
     });
 
     lenderData.forEach(lender => {
@@ -335,10 +316,20 @@ export class AnalyticsController {
   }
 
   private async showInterestAnalysis(loans: LoanModel[]): Promise<void> {
-    console.log('\n' + chalk.bold('💰 Interest Analysis:'));
+    console.log(
+      boxen(
+        chalk.magenta.bold('💰 INTEREST ANALYSIS'),
+        {
+          padding: 1,
+          margin: 1,
+          borderStyle: 'double',
+          borderColor: 'magenta',
+          textAlignment: 'center',
+        }
+      )
+    );
 
-    const interestData =
-      await this.analyticsService.generateInterestAnalysis(loans);
+    const interestData = await this.analyticsService.generateInterestAnalysis(loans);
 
     const interestTable = new Table({
       head: [
@@ -350,6 +341,7 @@ export class AnalyticsController {
         head: ['magenta'],
         border: ['gray'],
       },
+      colWidths: [25, 20, 15],
     });
 
     interestTable.push(
@@ -376,7 +368,18 @@ export class AnalyticsController {
   }
 
   private async showPaymentTrends(loans: LoanModel[]): Promise<void> {
-    console.log('\n' + chalk.bold('📊 Payment Trends:'));
+    console.log(
+      boxen(
+        chalk.yellow.bold('📊 PAYMENT TRENDS'),
+        {
+          padding: 1,
+          margin: 1,
+          borderStyle: 'double',
+          borderColor: 'yellow',
+          textAlignment: 'center',
+        }
+      )
+    );
 
     const trendData = await this.analyticsService.generatePaymentTrends(loans);
 
@@ -391,6 +394,7 @@ export class AnalyticsController {
         head: ['yellow'],
         border: ['gray'],
       },
+      colWidths: [18, 12, 18, 15],
     });
 
     trendData.forEach(trend => {
@@ -409,7 +413,18 @@ export class AnalyticsController {
   }
 
   private async showRiskAssessment(loans: LoanModel[]): Promise<void> {
-    console.log('\n' + chalk.bold('🎯 Risk Assessment:'));
+    console.log(
+      boxen(
+        chalk.cyan.bold('🎯 RISK ASSESSMENT'),
+        {
+          padding: 1,
+          margin: 1,
+          borderStyle: 'double',
+          borderColor: 'cyan',
+          textAlignment: 'center',
+        }
+      )
+    );
 
     const riskData = await this.analyticsService.generateRiskAssessment(loans);
 
@@ -424,6 +439,7 @@ export class AnalyticsController {
         head: ['cyan'],
         border: ['gray'],
       },
+      colWidths: [18, 10, 12, 35],
     });
 
     riskData.factors.forEach(factor => {
