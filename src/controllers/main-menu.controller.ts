@@ -16,6 +16,7 @@ export class MainMenuController {
   private exportController: ExportController;
   private backupController: BackupController;
   private configController: ConfigController;
+  private isShuttingDown: boolean = false;
 
   constructor() {
     this.logger = new Logger();
@@ -181,6 +182,12 @@ export class MainMenuController {
   }
 
   private async handleExit(): Promise<void> {
+    // Prevent duplicate shutdown messages
+    if (this.isShuttingDown) {
+      return;
+    }
+    
+    this.isShuttingDown = true;
     console.clear();
     
     const spinner = createSpinner('Shutting down LoanTrack Pro...').start();
@@ -198,28 +205,8 @@ export class MainMenuController {
 
       console.log();
       
-      // Show goodbye message
-      const goodbyeMessage = boxen(
-        chalk.cyan('👋 Thank you for using LoanTrack Pro!') +
-          '\n\n' +
-          chalk.white('Your financial data has been saved securely.') +
-          '\n' +
-          chalk.gray('Created with ❤️  by John Ilesanmi') +
-          '\n\n' +
-          chalk.blue('📱 Instagram: @numcalm') +
-          '\n' +
-          chalk.blue('🐙 GitHub: @tamecalm'),
-        {
-          padding: 1,
-          margin: 1,
-          borderStyle: 'round',
-          borderColor: 'blue',
-          textAlignment: 'center',
-          width: Math.min(process.stdout.columns - 4, 60),
-        }
-      );
-
-      console.log(goodbyeMessage);
+      // Show goodbye message ONLY ONCE
+      await this.showGoodbyeMessage();
       
       // Brief pause before exit
       await new Promise(resolve => setTimeout(resolve, 1500));
@@ -227,6 +214,30 @@ export class MainMenuController {
       spinner.error({ text: 'Error during shutdown' });
       this.logger.error('Error during application shutdown', error as Error);
     }
+  }
+
+  private async showGoodbyeMessage(): Promise<void> {
+    const goodbyeMessage = boxen(
+      chalk.cyan('👋 Thank you for using LoanTrack Pro!') +
+        '\n\n' +
+        chalk.white('Your financial data has been saved securely.') +
+        '\n' +
+        chalk.gray('Created with ❤️  by John Ilesanmi') +
+        '\n\n' +
+        chalk.blue('📱 Instagram: @numcalm') +
+        '\n' +
+        chalk.blue('🐙 GitHub: @tamecalm'),
+      {
+        padding: 1,
+        margin: 1,
+        borderStyle: 'round',
+        borderColor: 'blue',
+        textAlignment: 'center',
+        width: Math.min(process.stdout.columns - 4, 60),
+      }
+    );
+
+    console.log(goodbyeMessage);
   }
 }
 
